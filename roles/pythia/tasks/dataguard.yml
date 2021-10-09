@@ -1,0 +1,140 @@
+---
+
+###################################################################################
+# Before Duplicating a Database for Dataguard we need to check if this 
+# Database is already existant and running.
+# Tag: dataguard
+###################################################################################
+- name: Check if Source Oracle SID {{ dataguard_source_sid }} already exists
+  shell: "grep -w {{ dataguard_source_sid }} /etc/oratab"
+  become: yes
+  register: result
+  failed_when: "'ERROR' in result.stderr"
+  delegate_to: "{{ dataguard_source_host }}"
+  run_once: true
+  tags:
+    - dataguard
+
+- name: Oracle SID to Duplicate for Standby does NOT exists
+  assert:
+    that: dataguard_source_sid in item.stdout
+    fail_msg: There is no database {{ dataguard_source_sid }} on the Source System.
+    success_msg: Oracle SID {{ dataguard_source_sid }} is registered on the Source System. Proceed with Duplicate for Standby.
+  become: yes
+  with_items:
+    - "{{ result }}"
+  delegate_to: "{{ dataguard_source_host }}"
+  run_once: true
+  tags:
+    - dataguard
+
+- name: Gather Oracle Home used by Source SID {{ dataguard_source_sid }}
+  become: yes
+  shell: "cat /etc/oratab | grep {{ dataguard_source_sid }} | awk -F \":\" {'print$2'}"
+  args:
+    removes: /etc/oratab
+  register: dataguard_source_home
+  delegate_to: "{{ dataguard_source_host }}"
+  run_once: true
+  tags:
+    - dataguard
+
+- name: Check if Source Database is Open
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "echo -e \"select status from v\\$instance;\" | {{ dataguard_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  environment:
+    ORACLE_HOME: "{{ dataguard_source_home.stdout }}"
+    ORACLE_SID: "{{ dataguard_source_sid }}"
+  register: source_db_status
+  delegate_to: "{{ dataguard_source_host }}"
+  run_once: true
+  tags:
+    - dataguard
+
+- name: Oracle SID to Duplicate for Standby is NOT in OPEN State
+  assert:
+    that: '"OPEN" | string in item.stdout'
+    fail_msg: The Source Database {{ dataguard_source_sid }} is not in OPEN State.
+    success_msg: Oracle SID {{ dataguard_source_sid }} is in OPEN State. Proceed with Duplicate for Standby.
+  become: yes
+  become_user: "{{ oracle_user }}"
+  with_items:
+    - "{{ source_db_status }}"
+  delegate_to: "{{ dataguard_source_host }}"
+  run_once: true
+  tags:
+    - dataguard
+    
+###################################################################################
+# We create needed Directory Structure for the Target Database
+# Tag: dataguard
+###################################################################################
+
+- name: Setting oracle_sid Variable
+  set_fact:
+    oracle_sid: "{{ dataguard_target_sid }}"
+  tags:
+    - dataguard
+
+- name: Create DB Directories for Target Database
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+    mode: 0774
+  become: yes
+  with_items:
+    - "{{ sid_directory_list }}"
+  tags:
+    - dataguard
+    
+###################################################################################
+# Check if the specified Oracle Home for the Source is also installed on the
+# Target System. It is assumed, that the RDBMS Installation Path is the same
+# for Source and Target side.
+# Tag: dataguard
+###################################################################################
+
+- name: Get Oracle Inventory Location on Target Server
+  shell: "grep -w inventory_loc /etc/oraInst.loc | awk -F \"=\" {'print$2'}"
+  become: yes
+  register: oracle_inventory
+  failed_when: "'ERROR' in result.stderr"
+  delegate_to: "{{ dataguard_target_host }}"
+  run_once: true
+  tags:
+    - dataguard
+
+- name: Oracle RDBMS is not installed on Target Host
+  assert:
+    that: oracle_inventory.stdout|length > 0
+    fail_msg: It seems, that there is no Oracle Software installed on Target Host {{ dataguard_target_host }}
+    success_msg: Oracle Software seem to be installed on Target Host {{ dataguard_target_host }}. Proceed with Duplicate.
+  become: yes
+  delegate_to: "{{ dataguard_target_host }}"
+  run_once: true
+  tags:
+    - dataguard
+
+- name: Check if Oracle Home specified is also installed on the Target Server
+  shell: "grep -w {{ dataguard_source_home.stdout }} {{ oracle_inventory.stdout }}/ContentsXML/inventory.xml"
+  become: yes
+  register: result
+  failed_when: "'ERROR' in result.stderr"
+  delegate_to: "{{ dataguard_target_host }}"
+  run_once: true
+  tags:
+    - dataguard
+
+- name: Oracle Home {{ dataguard_source_home.stdout }} is registered in Inventory
+  assert:
+    that: dataguard_source_home.stdout in item.stdout
+    fail_msg: "The Oracle Home {{ dataguard_source_home.stdout }} is not registered in Inventory"
+    success_msg: "Oracle Home {{ dataguard_source_home.stdout }} found."
+  become: yes
+  with_items:
+    - "{{ result }}"
+  tags:
+    - dataguard

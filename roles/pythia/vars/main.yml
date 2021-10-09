@@ -40,6 +40,10 @@
 #  - current_hugepages (Default 0): Just for initializing the Variable. Must not be modified
 #  - hugepages (Default 0): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
 #  - client_install_type (Default Administrator): Choose Which Client Install Type you want to install. Can be Administrator, Runtime, InstantClient or Custom
+#  - dataguard_source_host (Default NULL): The source host on which the dataguard_source_sid is running. Only needed when starting the playbook with the "dataguard" tag, for duplicating a Database and setup Dataguard Replication.
+#  - dataguard_target_host (Default NULL): The target host on which the dataguard_target_sid is running. Only needed when starting the playbook with the "dataguard" tag, for duplicating a Database and setup Dataguard Replication.
+#  - dataguard_source_sid (Default NULL): The source SID of the Database to setup a Dataguard Replication (Primary SID). Only needed when starting the playbook with the "dataguard" tag, for duplicating a Database and setup a Dataguard Replication.
+#  - dataguard_target_sid (Default NULL): The target SID of the Database to setup a Dataguard Replication to (Standby SID). Only needed when starting the playbook with the "dataguard" tag, for duplicating a Database  and setup a Dataguard Replication.
 #  - duplicate_source_host (Default NULL): The source host on which the duplicate_source_sid is running. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
 #  - duplicate_target_host (Default NULL): The target host on which the duplicate_target_sid is running. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
 #  - duplicate_source_sid (Default NULL): The source SID of the Database to duplicate. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
@@ -113,6 +117,12 @@ upgrade_log_dir: "/oracle/cfgtoollogs/autoupgrade/{{ ansible_date_time.date }}_{
 upgrade_mode: analyze
 autoupgrade_jar_dir: /db/oracle/19/rdbms/linux/x86_64/upgrade
 create_grp: no
+
+# Control Variables for Dataguard
+dataguard_source_host: ""
+dataguard_target_host: ""
+dataguard_source_sid: ""
+dataguard_target_sid: ""
 
 # Control Variables for Duplicate
 duplicate_source_host: ""
