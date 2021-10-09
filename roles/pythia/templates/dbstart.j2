@@ -1,0 +1,522 @@
+#!/bin/sh
+#
+# $Id: dbstart.sh /unix/8 2018/02/28 14:15:35 suelee Exp $ 
+# Copyright (c) 1991, 2018, Oracle and/or its affiliates. All rights reserved.
+#
+
+###################################
+# 
+# usage: dbstart $ORACLE_HOME
+#
+# This script is used to start ORACLE from /etc/rc(.local).
+# It should ONLY be executed as part of the system boot procedure.
+#
+# This script will start all databases listed in the oratab file
+# whose third field is a "Y".  If the third field is set to "Y" and
+# there is no ORACLE_SID for an entry (the first field is a *),
+# then this script will ignore that entry.
+#
+# This script requires that ASM ORACLE_SID's start with a +, and 
+# that non-ASM instance ORACLE_SID's do not start with a +.
+#
+# If ASM instances are to be started with this script, it cannot
+# be used inside an rc*.d directory, and should be invoked from
+# rc.local only. Otherwise, the CSS service may not be available
+# yet, and this script will block init from completing the boot
+# cycle.
+#
+# If you want dbstart to auto-start a single-instance database that uses
+# an ASM server that is auto-started by CRS (this is the default behavior
+# for an ASM cluster), you must change the database's ORATAB entry to use
+# a third field of "W" and the ASM's ORATAB entry to use a third field of "N".
+# These values specify that dbstart auto-starts the database only after
+# the ASM instance is up and running.
+#
+# Note:
+# Use ORACLE_TRACE=T for tracing this script.
+#
+# The progress log for each instance bringup plus Error and Warning message[s]
+# are logged in $ORACLE_BASE_HOME/rdbms/log/startup.log. 
+# The error messages related to instance bringup are also logged to syslog 
+# (system log module).
+# The Listener log is located at $ORACLE_BASE_HOME/network/log/listener.log.
+# 
+# On all UNIX platforms except SOLARIS
+# ORATAB=/etc/oratab
+#
+# To configure, update ORATAB with Instances that need to be started up
+#    Entries are of the form:
+#    $ORACLE_SID:$ORACLE_HOME:<N|Y|W>:
+#    An example entry:
+#    main:/usr/lib/oracle/emagent_10g:Y
+#
+# Overall algorithm:
+# 1) Bring up all ASM instances with 'Y' entry in status field in oratab entry
+# 2) Bring up all Database instances with 'Y' entry in status field in
+#    oratab entry
+# 3) If there are Database instances with 'W' entry in status field
+#    then
+#      iterate over all ASM instances (irrespective of 'Y' or 'N') AND
+#      wait for all of them to be started
+#    fi
+# 4) Bring up all Database instances with 'W' entry in status field in
+#    oratab entry
+#
+#####################################
+
+LOGMSG="logger -puser.alert -s "
+
+trap 'exit' 1 2 3
+
+# for script tracing
+case $ORACLE_TRACE in
+  T) set -x ;;
+esac
+    
+# Set path if path not set (if called from /etc/rc)
+SAVE_PATH=/bin:/usr/bin:/etc:${PATH} ; export PATH
+SAVE_LLP=$LD_LIBRARY_PATH
+
+# First argument is used to bring up Oracle Net Listener
+ORACLE_HOME_LISTNER=$1
+if [ ! $ORACLE_HOME_LISTNER ]; then
+  echo "Since ORACLE_HOME is not set, cannot auto-start Oracle Net Listener."
+  echo "Usage: $0 ORACLE_HOME"
+else
+  # Set the ORACLE_HOME for the Oracle Net Listener, it gets reset to
+  # a different ORACLE_HOME for each entry in the oratab.
+  ORACLE_HOME=$1; export ORACLE_HOME
+
+  # Determine location of listener.log
+  ORACLE_BASE_HOME=$ORACLE_HOME
+  ORABASEHOME_EXEC=$1/bin/orabasehome
+  if [ -f $ORABASEHOME_EXEC ]; then
+    if [ -x $ORABASEHOME_EXEC ]; then
+      ORACLE_BASE_HOME=`$ORABASEHOME_EXEC`
+    fi
+  fi
+  export ORACLE_BASE_HOME
+
+  ORACLE_BASE_CONFIG=$ORACLE_HOME
+  ORABASECONFIG_EXEC=$1/bin/orabaseconfig
+  if [ -f $ORABASECONFIG_EXEC ]; then
+    if [ -x $ORABASECONFIG_EXEC ]; then
+      ORACLE_BASE_CONFIG=`$ORABASECONFIG_EXEC`
+    fi
+  fi
+  export ORACLE_BASE_CONFIG
+
+  # Determine location of listener.log
+  mkdir -p -- $ORACLE_BASE_HOME/network/log
+  LOG=$ORACLE_BASE_HOME/network/log/listener.log
+
+  # Start Oracle Net Listener
+  if [ -x $ORACLE_HOME/bin/tnslsnr ] ; then
+    echo "$0: Starting Oracle Net Listener" >> $LOG 2>&1
+    $ORACLE_HOME/bin/lsnrctl start {{ listener_prefix }}{{ oracle_sid }} >> $LOG 2>&1 &
+    VER10LIST=`$ORACLE_HOME/bin/lsnrctl version | grep "LSNRCTL for " | cut -d' ' -f5 | cut -d'.' -f1`
+    export VER10LIST
+  else
+    echo "Failed to auto-start Oracle Net Listener using $ORACLE_HOME/bin/tnslsnr"
+  fi
+fi
+
+# Set this in accordance with the platform
+ORATAB=/etc/oratab
+if [ ! $ORATAB ] ; then
+  echo "$ORATAB not found"
+  exit 1;
+fi
+
+# Checks Version Mismatch between Listener and Database Instance.
+# A version 10 listener is required for an Oracle Database 10g database.
+# Previous versions of the listener are not supported for use with an Oracle
+# Database 10g database. However, it is possible to use a version 10 listener
+# with previous versions of the Oracle database.
+checkversionmismatch() {
+  if [ $VER10LIST ] ; then
+    VER10INST=`sqlplus -V | grep "Release " | cut -d' ' -f3 | cut -d'.' -f1`
+    if [ $VER10LIST -lt $VER10INST ] ; then
+      $LOGMSG "Listener version $VER10LIST NOT supported with Database version $VER10INST"
+      $LOGMSG "Restart Oracle Net Listener using an alternate ORACLE_HOME:"
+      $LOGMSG "lsnrctl start {{ listener_prefix }}{{ oracle_sid }}"
+    fi
+  fi
+}
+
+# Starts a Database Instance
+startinst() {
+  # Called programs use same database ID
+  export ORACLE_SID
+
+  ORACLE_BASE_HOME=$ORACLE_HOME
+  ORABASEHOME_EXEC=$1/bin/orabasehome
+  if [ -f $ORABASEHOME_EXEC ]; then
+    if [ -x $ORABASEHOME_EXEC ]; then
+      ORACLE_BASE_HOME=`$ORABASEHOME_EXEC`
+    fi
+  fi
+  export ORACLE_BASE_HOME
+
+  ORACLE_BASE_CONFIG=$ORACLE_HOME
+  ORABASECONFIG_EXEC=$ORACLE_HOME/bin/orabaseconfig
+  if [ -f $ORABASECONFIG_EXEC ]; then
+    if [ -x $ORABASECONFIG_EXEC ]; then
+      ORACLE_BASE_CONFIG=`$ORABASECONFIG_EXEC`
+    fi
+  fi
+  export ORACLE_BASE_CONFIG
+
+  # Put $ORACLE_HOME/bin into PATH and export.
+  PATH=$ORACLE_HOME/bin:${SAVE_PATH} ; export PATH
+  # add for bug # 652997
+  LD_LIBRARY_PATH=${ORACLE_HOME}/lib:${SAVE_LLP} ; export LD_LIBRARY_PATH
+  PFILE=${ORACLE_BASE_CONFIG}/dbs/init${ORACLE_SID}.ora
+  SPFILE=${ORACLE_BASE_CONFIG}/dbs/spfile${ORACLE_SID}.ora
+  SPFILE1=${ORACLE_BASE_CONFIG}/dbs/spfile.ora
+
+  echo ""
+  echo "$0: Starting up database \"$ORACLE_SID\""
+  date
+  echo ""
+
+  checkversionmismatch
+
+  # See if it is a V6 or V7 database
+  VERSION=undef
+  if [ -f $ORACLE_HOME/bin/sqldba ] ; then
+    SQLDBA=sqldba
+    VERSION=`$ORACLE_HOME/bin/sqldba command=exit | awk '
+      /SQL\*DBA: (Release|Version)/ {split($3, V, ".") ;
+      print V[1]}'`
+    case $VERSION in
+      "6") ;;
+      *) VERSION="internal" ;;
+    esac
+  else
+    if [ -f $ORACLE_HOME/bin/svrmgrl ] ; then
+      SQLDBA=svrmgrl
+      VERSION="internal"
+    else
+      SQLDBA="sqlplus /nolog"
+    fi
+  fi
+
+  STATUS=1
+  if [ -f $ORACLE_BASE_CONFIG/dbs/sgadef${ORACLE_SID}.dbf ] ; then
+    STATUS="-1"
+  fi
+  if [ -f $ORACLE_BASE_CONFIG/dbs/sgadef${ORACLE_SID}.ora ] ; then
+    STATUS="-1"
+  fi
+  pmon=`ps -ef | grep -w "ora_pmon_$ORACLE_SID"  | grep -v grep`
+  if [ "$pmon" != "" ] ; then
+    STATUS="-1"
+    $LOGMSG "Warning: ${INST} \"${ORACLE_SID}\" already started."
+  fi
+
+  if [ $STATUS -eq -1 ] ; then
+    $LOGMSG "Warning: ${INST} \"${ORACLE_SID}\" possibly left running when system went down (system crash?)."
+    $LOGMSG "Action: Notify Database Administrator."
+    case $VERSION in
+      "6")  sqldba "command=shutdown abort" ;;
+      "internal")  $SQLDBA $args <<EOF
+connect internal
+shutdown abort
+EOF
+        ;;
+      *)  $SQLDBA $args <<EOF
+connect / as sysdba
+shutdown abort
+quit
+EOF
+        ;;
+    esac
+
+    if [ $? -eq 0 ] ; then
+      STATUS=1
+    else
+      $LOGMSG "Error: ${INST} \"${ORACLE_SID}\" NOT started."
+    fi
+  fi
+
+  if [ $STATUS -eq 1 ] ; then
+    if [ -e $SPFILE -o -e $SPFILE1 -o -e $PFILE ] ; then
+      case $VERSION in
+        "6")  sqldba command=startup ;;
+        "internal")  $SQLDBA <<EOF 
+connect internal
+startup
+EOF
+          ;;
+        *)  $SQLDBA <<EOF 
+connect / as sysdba
+startup
+quit
+EOF
+          ;;
+      esac
+
+      if [ $? -eq 0 ] ; then
+        echo "" 
+        echo "$0: ${INST} \"${ORACLE_SID}\" warm started." 
+      else
+        $LOGMSG "" 
+        $LOGMSG "Error: ${INST} \"${ORACLE_SID}\" NOT started." 
+      fi
+    else
+      $LOGMSG "" 
+      $LOGMSG "No init file found for ${INST} \"${ORACLE_SID}\"." 
+      $LOGMSG "Error: ${INST} \"${ORACLE_SID}\" NOT started." 
+    fi
+  fi
+}
+
+# Starts an ASM Instance
+startasminst() {
+  # Called programs use same database ID
+  export ORACLE_SID
+  ORACLE_HOME=`echo $LINE | awk -F: '{print $2}' -`
+  # Called scripts use same home directory
+  export ORACLE_HOME
+
+  # For ASM instances, we have a dependency on the CSS service.
+  # Wait here for it to become available before instance startup.
+
+  # Is the 10g install intact? Are all necessary binaries present?
+  if [ ! -x $ORACLE_HOME/bin/crsctl ]; then
+    $LOGMSG "$ORACLE_HOME/bin/crsctl not found when attempting to start"
+    $LOGMSG "  ASM instance $ORACLE_SID."
+
+  else 
+    COUNT=0
+    $ORACLE_HOME/bin/crsctl check css
+    RC=$?
+    while [ "$RC" != "0" ];
+      do
+      COUNT=`expr $COUNT + 1`
+      if [ $COUNT = 15 ] ; then
+        # 15 tries with 20 sec interval => 5 minutes timeout
+        $LOGMSG "Timed out waiting to start ASM instance $ORACLE_SID"         
+        $LOGMSG "  CSS service is NOT available."
+        exit $COUNT
+      fi
+      $LOGMSG "Waiting for Oracle CSS service to be available before starting "
+      $LOGMSG " ASM instance $ORACLE_SID. Wait $COUNT."
+      sleep 20
+      $ORACLE_HOME/bin/crsctl check css
+      RC=$?
+    done
+  fi
+  startinst
+}
+
+# Start of dbstartup script
+#
+# Loop for every entry in oratab file and and try to start
+# that ORACLE.
+#
+# ASM instances need to be started before 'Database instances'
+# ASM instance is identified with '+' prefix in ORACLE_SID
+# Following loop brings up ASM instance[s]
+
+cat $ORATAB | while read LINE
+do
+case $LINE in
+  \#*)                ;;        #comment-line in oratab
+  *)
+  ORACLE_SID=`echo $LINE | awk -F: '{print $1}' -`
+  if [ "$ORACLE_SID" = '*' ] ; then
+    # same as NULL SID - ignore this entry
+    ORACLE_SID=""
+    continue
+  fi
+  # Proceed only if last field is 'Y'.
+  if [ "`echo $LINE | awk -F: '{print $NF}' -`" = "Y" ] ; then
+    # If ASM instances
+    if [ `echo $ORACLE_SID | cut -b 1` = '+' ]; then
+      INST="ASM instance"
+      ORACLE_HOME=`echo $LINE | awk -F: '{print $2}' -`
+      export ORACLE_HOME
+
+      ORACLE_BASE_HOME=$ORACLE_HOME
+      ORABASEHOME_EXEC=$ORACLE_HOME/bin/orabasehome
+      if [ -f $ORABASEHOME_EXEC ]; then
+        if [ -x $ORABASEHOME_EXEC ]; then
+          ORACLE_BASE_HOME=`$ORABASEHOME_EXEC`
+        fi
+      fi
+
+      # Called scripts use same home directory
+      # file for logging script's output
+      mkdir -p -- $ORACLE_BASE_HOME/rdbms/log
+      LOG=$ORACLE_BASE_HOME/rdbms/log/startup.log
+      echo "Processing $INST \"$ORACLE_SID\": log file $LOG"
+      touch $LOG
+      chmod a+r $LOG
+      startasminst >> $LOG 2>&1
+    fi
+  fi
+  ;;
+esac
+done
+
+# exit if there was any trouble bringing up ASM instance[s]
+if [ "$?" != "0" ] ; then
+  exit 2
+fi
+
+#
+# Following loop brings up 'Database instances'
+#
+cat $ORATAB | while read LINE
+do
+case $LINE in
+  \#*)                ;;        #comment-line in oratab
+  *)
+  ORACLE_SID=`echo $LINE | awk -F: '{print $1}' -`
+  if [ "$ORACLE_SID" = '*' ] ; then
+    # same as NULL SID - ignore this entry
+    ORACLE_SID=""
+    continue
+  fi
+  # Proceed only if last field is 'Y'.
+  if [ "`echo $LINE | awk -F: '{print $NF}' -`" = "Y" ] ; then
+    # If non-ASM instances
+    if [ `echo $ORACLE_SID | cut -b 1` != '+' ]; then
+      INST="Database instance"
+      ORACLE_HOME=`echo $LINE | awk -F: '{print $2}' -`
+      export ORACLE_HOME
+
+      ORACLE_BASE_HOME=$ORACLE_HOME
+      ORABASEHOME_EXEC=$ORACLE_HOME/bin/orabasehome
+      if [ -f $ORABASEHOME_EXEC ]; then
+        if [ -x $ORABASEHOME_EXEC ]; then
+          ORACLE_BASE_HOME=`$ORABASEHOME_EXEC`
+        fi
+      fi
+
+      # Called scripts use same home directory
+      # file for logging script's output
+      mkdir -p -- $ORACLE_BASE_HOME/rdbms/log
+      LOG=$ORACLE_BASE_HOME/rdbms/log/startup.log
+      echo "Processing $INST \"$ORACLE_SID\": log file $LOG"
+      touch $LOG
+      chmod a+r $LOG
+      startinst >> $LOG 2>&1
+    fi
+  fi
+  ;;
+esac
+done
+
+#
+# Following loop brings up 'Database instances' that have wait state 'W'
+#
+cat $ORATAB | while read LINE
+do
+case $LINE in
+  \#*)                ;;        #comment-line in oratab
+  *)
+  ORACLE_SID=`echo $LINE | awk -F: '{print $1}' -`
+  if [ "$ORACLE_SID" = '*' ] ; then
+    # same as NULL SID - ignore this entry
+    ORACLE_SID=""
+    continue
+  fi
+  # Proceed only if last field is 'W'.
+  if [ "`echo $LINE | awk -F: '{print $NF}' -`" = "W" ] ; then
+    W_ORACLE_SID=`echo $LINE | awk -F: '{print $1}' -`
+    # DB instances with 'W' (wait state) have a dependency on ASM instances via CRS.
+    # Wait here for 'all' ASM instances to become available.
+    cat $ORATAB | while read LINE
+    do
+    case $LINE in
+      \#*)                ;;        #comment-line in oratab
+      *)
+      ORACLE_SID=`echo $LINE | awk -F: '{print $1}' -`
+      if [ "$ORACLE_SID" = '*' ] ; then
+        # same as NULL SID - ignore this entry
+        ORACLE_SID=""
+        continue
+      fi
+      if [ `echo $ORACLE_SID | cut -b 1` = '+' ]; then
+        INST="ASM instance"
+        ORACLE_HOME=`echo $LINE | awk -F: '{print $2}' -`
+        if [ -x $ORACLE_HOME/bin/srvctl ] ; then
+          COUNT=0
+          NODE=`olsnodes -l`
+          RNODE=`srvctl status asm -n $NODE | grep "$ORACLE_SID is running"`
+          RC=$?
+          while [ "$RC" != "0" ]; # wait until this comes up!
+          do
+            COUNT=`expr $COUNT + 1`
+            if [ $COUNT = 5 ] ; then
+              # 5 tries with 60 sec interval => 5 minutes timeout
+              $LOGMSG "Error: Timed out waiting on CRS to start ASM instance $ORACLE_SID"         
+              exit $COUNT
+            fi
+            $LOGMSG "Waiting for Oracle CRS service to start ASM instance $ORACLE_SID"
+            $LOGMSG "Wait $COUNT."
+            sleep 60
+            RNODE=`srvctl status asm -n $NODE | grep "$ORACLE_SID is running"`
+            RC=$?
+          done
+        else
+          $LOGMSG "Error: \"${W_ORACLE_SID}\" has dependency on ASM instance \"${ORACLE_SID}\""
+          $LOGMSG "Error: Need $ORACLE_HOME/bin/srvctl to check this dependency"
+        fi
+      fi     # asm instance
+      ;;
+    esac
+    done # innner while
+  fi
+  ;;
+esac
+done # outer while
+
+# by now all the ASM instances have come up and we can proceed to bring up
+# DB instance with 'W' wait status
+
+cat $ORATAB | while read LINE
+do
+case $LINE in
+  \#*)                ;;        #comment-line in oratab
+  *)
+  ORACLE_SID=`echo $LINE | awk -F: '{print $1}' -`
+  if [ "$ORACLE_SID" = '*' ] ; then
+    # same as NULL SID - ignore this entry
+    ORACLE_SID=""
+    continue
+  fi
+  # Proceed only if last field is 'W'.
+  if [ "`echo $LINE | awk -F: '{print $NF}' -`" = "W" ] ; then
+    INST="Database instance"
+    if [ `echo $ORACLE_SID | cut -b 1` = '+' ]; then
+      $LOGMSG "Error: ${INST} \"${ORACLE_SID}\" NOT started"
+      $LOGMSG "Error: incorrect usage: 'W' not allowed for ASM instances"
+      continue
+    fi
+    ORACLE_HOME=`echo $LINE | awk -F: '{print $2}' -`
+    export ORACLE_HOME
+
+    ORACLE_BASE_HOME=$ORACLE_HOME
+    ORABASEHOME_EXEC=$ORACLE_HOME/bin/orabasehome
+    if [ -f $ORABASEHOME_EXEC ]; then
+      if [ -x $ORABASEHOME_EXEC ]; then
+        ORACLE_BASE_HOME=`$ORABASEHOME_EXEC`
+      fi
+    fi
+
+    # Called scripts use same home directory
+    # file for logging script's output
+    mkdir -p -- $ORACLE_BASE_HOME/rdbms/log
+    LOG=$ORACLE_BASE_HOME/rdbms/log/startup.log
+    echo "Processing $INST \"$ORACLE_SID\": log file $LOG"
+    touch $LOG
+    chmod a+r $LOG
+    startinst >> $LOG 2>&1
+  fi
+  ;;
+esac
+done

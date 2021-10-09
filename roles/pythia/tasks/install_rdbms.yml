@@ -1,0 +1,198 @@
+---
+# Task File for Pythia
+
+- name: Setting Ansible Remote Temporary Directory
+  set_fact:
+    ansible_remote_tmp: "{{ remote_stage_directory }}"
+  tags:
+    - rdbms
+
+###################################################################################
+# Check which Mountpoint is used for the specified Oracle Home
+# Tag: rdbms
+###################################################################################
+- name: Check which mountpoint is used by {{ rdbms[oracle_version|string].oracle_home }}
+  command: findmnt -n -o TARGET --target {{ rdbms[oracle_version|string].oracle_home }}
+  become: yes
+  register: oracle_home_mount
+  tags:
+    - rdbms
+
+###################################################################################
+# Check for enough Disk Space for new Oracle Home. Has to run twice because
+# overloaded Variable space_needed_gb is defined on Playbook call.
+# Tag: rdbms
+###################################################################################
+- name: Check for enough available diskspace for {{ rdbms[oracle_version|string].oracle_home }}
+  assert:
+    that: item.size_available > ({{ space_needed_gb }}* 1024 * 1024 * 1024)
+    fail_msg: There should be at least {{ space_needed_gb }}GB of free space for installing RDBMS Software
+    success_msg: There is sufficient space for installing RDBMS Software
+  become: yes
+  when: (item.mount == oracle_home_mount.stdout) and (space_needed_gb > 0)
+  with_items:
+    - "{{ ansible_mounts }}"
+  loop_control:
+    label: "{{ item.mount }}"
+  tags:
+    - rdbms
+
+- name: Check for enough available diskspace for {{ rdbms[oracle_version|string].oracle_home }}
+  assert:
+    that: item.size_available > (rdbms[oracle_version|string].space_needed_gb * 1024 * 1024 * 1024)
+    fail_msg: There should be at least {{ rdbms[oracle_version|string].space_needed_gb }}GB of free space for installing RDBMS Software
+    success_msg: There is sufficient space for installing RDBMS Software
+  become: yes
+  when: (item.mount == oracle_home_mount.stdout) and (space_needed_gb <= 0)
+  with_items:
+    - "{{ ansible_mounts }}"
+  loop_control:
+    label: "{{ item.mount }}"
+  tags:
+    - rdbms
+
+###################################################################################
+# Check if the specified Oracle Home is already installed / registered within the
+# Oracle Inventory and if the specified Oracle Home is empty or not.
+# Tag: rdbms
+###################################################################################
+- name: Check if Oracle Home specified already registered in Inventory
+  shell: "grep -w {{ rdbms[oracle_version|string].oracle_home }} {{ rdbms[oracle_version|string].oracle_inventory }}/ContentsXML/inventory.xml"
+  become: yes
+  register: result
+  failed_when: "'ERROR' in result.stderr"
+  tags:
+    - rdbms
+
+- name: Oracle Home {{ rdbms[oracle_version|string].oracle_home }} already registered in Inventory
+  assert:
+    that: rdbms[oracle_version|string].oracle_home not in item.stdout
+    fail_msg: "The Oracle Home {{ rdbms[oracle_version|string].oracle_home }} already registered in Inventory"
+    success_msg: "Oracle Home {{ rdbms[oracle_version|string].oracle_home }} not found."
+  become: yes
+  with_items:
+    - "{{ result }}"
+  tags:
+    - rdbms
+
+- name: Check if Oracle Home specified is empty
+  become: yes
+  find:
+    paths: "{{ rdbms[oracle_version|string].oracle_home }}"
+  register: emptyHome
+  tags:
+    - rdbms
+
+- name: Oracle Home specified is not empty
+  fail:
+    msg: "Oracle Home {{ rdbms[oracle_version|string].oracle_home }} specified is not empty!"
+  when: emptyHome.matched > 0
+  tags:
+    - rdbms
+
+###################################################################################
+# Oracle RDBMS is now copied to the Target Server and uncompressed.
+# After that, it is installed by runInstaller.
+# Tag: rdbms
+###################################################################################
+
+- name: Be patient
+  debug:
+    msg: "The next Step will take several Minutes to complete!"
+  tags:
+    - rdbms
+
+- name: Copy Oracle Software Archive to Staging Area {{ remote_stage_directory }}
+  become: yes
+  copy:
+    src: "{{ local_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_dir }}/{{ rdbms[oracle_version|string].rdbms_file }}"
+    dest: "{{ remote_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_file }}"
+    remote_src: no
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+  tags:
+    - rdbms
+
+- name: Unpack Oracle Software to Oracle Home Location
+  become: yes
+  become_user: "{{ oracle_user }}"
+  unarchive:
+    src: "{{ remote_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_file }}"
+    dest: "{{ rdbms[oracle_version|string].oracle_home }}"
+    remote_src: yes
+    mode: 0755
+    group: "{{ oracle_group }}"
+    owner: "{{ oracle_user }}"
+  tags:
+    - rdbms
+
+- name: Cleanup Staging Area
+  file:
+    path: "{{ remote_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_file }}"
+    state: absent
+  become: yes
+  become_user: "{{ oracle_user }}"
+  tags:
+    - rdbms
+
+- name: Setup Oracle DB Software Response File
+  become: yes
+  become_user: "{{ oracle_user }}"
+  template:
+    src: roles/pythia/templates/{{ oracle_version }}_SoftwareOnly.rsp.j2
+    dest: "{{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp"
+    mode: 0755
+  tags:
+    - rdbms
+
+- name: Create oraInst.loc
+  become: yes
+  template:
+    src: roles/pythia/templates/oraInst.loc
+    dest: /etc/oraInst.loc
+    mode: 0644
+    owner: root
+  when: (ansible_distribution == 'CentOS')
+  tags:
+    - rdbms
+
+###################################################################################
+# Because Oracle will error out of the Installation when a RedHat Release = 8
+# distribution is used, we check for that and pretend to be an Oracle Linux 7. 
+# This is, why we call the runInstaller twice here.
+# Tag: rdbms
+###################################################################################
+
+- name: Install Oracle Database Software
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/runInstaller -ignorePrereq -silent -responseFile {{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp -noconfig"
+  register: result
+  failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
+  when: not (ansible_distribution_major_version == '8')
+  tags:
+    - rdbms
+
+- name: Install Oracle Database Software on RedHat / OEL / CentOS = 8 Releases
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/runInstaller -ignorePrereq -silent -responseFile {{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp -noconfig"
+  environment:
+    CV_ASSUME_DISTID: "OEL7.8"
+  register: result
+  failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
+  when: ((ansible_distribution == 'CentOS') or (ansible_distribution == 'RedHat') or (ansible_distribution == 'OracleLinux')) and (ansible_distribution_major_version == '8')
+  tags:
+    - rdbms
+
+- name: Execute root Skripts
+  shell: "{{ item }}"
+  become: yes
+  register: result
+  with_items:
+    - "/bin/sh {{ rdbms[oracle_version|string].oracle_inventory }}/orainstRoot.sh"
+    - "/bin/sh {{ rdbms[oracle_version|string].oracle_home }}/root.sh"
+  failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
+  tags:
+    - rdbms
+  

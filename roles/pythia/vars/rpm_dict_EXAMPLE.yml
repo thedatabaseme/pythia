@@ -1,0 +1,18 @@
+###################################################################################
+# RPM Dictionary for Pythia
+# rpm_dir: Path where the patch is located, relative to the local_stage_directory
+#          variable. Must reside under local_stage_directory.
+# rpm_file: Filename of the RPM / Archive.
+# archive: Controls if the RPM is contained within a TAR or ZIP Archive
+# unarchive_file: Specifies the filename when the RPM is unarchived
+# desc: Description of the RPM
+################################################################################### 
+
+rpm:
+  DEMO:
+    rpm_dir: rpm
+    rpm_file: demo.rpm
+    archive: no
+    unarchive_file:
+    additional_dir:
+    desc: "HTOP RPM for Demo use"

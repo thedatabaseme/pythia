@@ -1,0 +1,204 @@
+---
+
+###################################################################################
+# Download Autoupgrade Jar from Stage Directory and place it inside the Source
+# Oracle Home. 
+# Tag: upgrade
+###################################################################################
+- name: Copy Autoupgrade.jar to source oracle home {{ rdbms[oracle_source_version|string].oracle_home }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  copy:
+    src: "{{ local_stage_directory }}/{{ autoupgrade_jar_dir }}/autoupgrade.jar"
+    dest: "{{ rdbms[oracle_source_version|string].oracle_home }}/rdbms/admin/autoupgrade.jar"
+    remote_src: no
+  tags:
+    - upgrade 
+
+###################################################################################
+# Getting the Hostname with DNS Suffix. This is needed for the upgrade Config.
+# Upgrade Configuration is placed in the Source Oracle Home.
+# Tag: upgrade
+###################################################################################
+
+- name: GetHostname
+  shell: "hostname -A"
+  become: yes
+  register: hostnamewithsuffix
+  tags:
+    - upgrade
+
+- name: Setting Upgrade Hostname Variable
+  set_fact:
+    upgradehostname: "{{ hostnamewithsuffix.stdout }}"
+  tags:
+    - upgrade
+
+- name: Prepare Upgrading Configuration 
+  become: yes
+  become_user: "{{ oracle_user }}"
+  template:
+    src: roles/pythia/templates/upgrade_config.cfg
+    dest: "{{ rdbms[oracle_source_version|string].oracle_home }}/rdbms/admin/upgrade_config.cfg"
+  tags:
+    - upgrade
+
+###################################################################################
+# Check if Oracle Source and Target exist and not Empty
+# Tag: upgrade
+###################################################################################
+    
+- name: Check if Source Oracle Home exists and is in the Inventory 
+  shell: "grep -w {{ rdbms[oracle_source_version|string].oracle_home }} {{ rdbms[oracle_source_version|string].oracle_inventory }}/ContentsXML/inventory.xml"    # Evtl. umstellen auf Inline? 
+  become: yes
+  register: result
+  failed_when: "'ERROR' in result.stderr"   
+  tags:
+    - upgrade
+    
+- name: Check if Oracle Source Home specified is empty
+  become: yes
+  find:
+    paths: "{{ rdbms[oracle_source_version|string].oracle_home }}"
+  register: emptyHome
+  tags:
+    - upgrade
+
+- name: Oracle Source Home specified does not exist
+  fail:
+    msg: "Oracle Source Home {{ rdbms[oracle_source_version|string].oracle_home }} specified does not exist!"
+  when: emptyHome.matched == 0
+  tags:
+    - upgrade 
+  
+- name: Check if Target Oracle Home exists and is in the Inventory 
+  shell: "grep -w {{ rdbms[oracle_target_version|string].oracle_home }} {{ rdbms[oracle_target_version|string].oracle_inventory }}/ContentsXML/inventory.xml"   # Evtl. umstellen auf Inline? 
+  become: yes
+  register: result
+  failed_when: "'ERROR' in result.stderr"   
+  tags:
+    - upgrade
+    
+- name: Check if Oracle Target Home specified is empty
+  become: yes
+  find:
+    paths: "{{ rdbms[oracle_target_version|string].oracle_home }}"
+  register: emptyHome
+  tags:
+    - upgrade
+
+- name: Oracle Source Home specified does not exist
+  fail:
+    msg: "Oracle Source Home {{ rdbms[oracle_target_version|string].oracle_home }} specified does not exist!"
+  when: emptyHome.matched == 0
+  tags:
+    - upgrade 
+
+###################################################################################
+# Check if Oracle Database is running   
+# Tag: upgrade
+###################################################################################
+
+- name: Check if Source Database is Open
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "echo -e \"select status from v\\$instance;\" | {{ rdbms[oracle_source_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_source_version|string].oracle_home }}"
+    ORACLE_SID: "{{ oracle_sid }}"
+  register: source_db_status
+  tags:
+    - upgrade
+
+- name: Oracle SID to Upgrade is NOT in OPEN State
+  assert:
+    that: '"OPEN" | string in item.stdout'
+    fail_msg: The Source Database {{ oracle_sid }} is not in OPEN State.
+    success_msg: Oracle SID {{ oracle_sid }} is in OPEN State. Proceed with Upgrade.
+  become: yes
+  become_user: "{{ oracle_user }}"
+  with_items:
+    - "{{ source_db_status }}"
+  tags:
+    - upgrade
+
+###################################################################################
+# Autoupgrade is performed here with the given upgrade Mode in the Variable
+# upgrade_mode 
+# Tag: upgrade
+###################################################################################
+
+- name: Upgrade Logfile location
+  debug:
+    msg: "Locations of upgrade Logfiles : {{ upgrade_log_dir }}/{{ oracle_sid }}/<JOBID>"
+  tags: 
+    - upgrade
+
+- name: Running Autoupgrade for Oracle DB {{ oracle_sid }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: 
+    cmd: "{{ rdbms[oracle_source_version|string].oracle_home }}/jdk/bin/java -jar autoupgrade.jar -config upgrade_config.cfg -mode {{ upgrade_mode }}"
+    chdir: "{{ rdbms[oracle_source_version|string].oracle_home }}/rdbms/admin"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_source_version|string].oracle_home }}"
+    ORACLE_SID: "{{ oracle_sid }}"
+  tags:
+    - upgrade
+
+###################################################################################
+# Postcheck if DB is open and listener config is correct.
+# Tag: upgrade
+###################################################################################
+
+- name: Check if Target Database is Open
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "echo -e \"select status from v\\$instance;\" | {{ rdbms[oracle_source_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_target_version|string].oracle_home }}"
+    ORACLE_SID: "{{ oracle_sid }}"
+  register: target_db_status 
+  tags:
+    - upgrade
+
+- name: Fail if DB is not open
+  fail:
+    msg: "The database is not in open state, please check!"
+  when: target_db_status.stdout.find('OPEN') == 1
+  tags:
+    - upgrade
+
+#Check listner running
+- name: Check which listener is running
+  become: yes
+  shell: "ps -ef | grep {{ listener_prefix }}{{ oracle_sid }}"
+  register: lsnr_running_status
+  tags:
+    - upgrade
+  
+#Stop Old listener 
+- name: Stop Listener {{ listener_prefix }}{{ oracle_sid }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_source_version|string].oracle_home }}/bin/lsnrctl stop {{ listener_prefix }}{{ oracle_sid }}"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_source_version|string].oracle_home }}"
+    ORACLE_BASE: "{{ rdbms[oracle_source_version|string].oracle_base }}"
+    ORACLE_SID: "{{ oracle_sid }}"
+  when: ( rdbms[oracle_source_version|string].oracle_home in lsnr_running_status.stdout )
+  tags:
+    - upgrade
+
+#Start New listener 
+- name: Start Listener {{ listener_prefix }}{{ oracle_sid }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_target_version|string].oracle_home }}/bin/lsnrctl start {{ listener_prefix }}{{ oracle_sid }}"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_target_version|string].oracle_home }}"
+    ORACLE_BASE: "{{ rdbms[oracle_target_version|string].oracle_base }}"
+    ORACLE_SID: "{{ oracle_sid }}"
+  when: ( rdbms[oracle_target_version|string].oracle_home not in lsnr_running_status.stdout )
+  tags:
+  - upgrade

@@ -1,0 +1,2 @@
+inventory_loc={{ rdbms[oracle_version|string].oracle_inventory }}
+inst_group=dba

@@ -1,0 +1,29 @@
+####################################################################################################################
+# Client Dictionary for Pythia
+# client_dir: Path where the Client Installation Archives are located on the Stage Directory (Ansible Host), relative to the local_stage_directory Variable
+# client_file: Filename of the Client Archive
+# oracle_base: Oracle Base Directory for the specified Client
+# oracle_home: Oracle Home Directory for the specified Client
+# oracle_inventory: Path to the Oracle Inventory Location
+# space_needed_gb: Space approximately in GB for installing the Client. Respects, 
+#                  that there is probably a Patch installed on top
+# desc: Description of the Client
+####################################################################################################################
+
+client:
+  19CLNT:
+    client_dir:
+    oracle_base: /u01/app/oracle
+    oracle_home: /u01/app/oracle/product/19.0.0/client_1
+    oracle_inventory: /u01/app/oracleInventory
+    client_file: LINUX.X64_193000_client.zip
+    space_needed_gb: 5
+    desc: "Oracle Database Client 19c"
+  18CLNT:
+    client_dir:
+    oracle_base: /u01/app/oracle
+    oracle_home: /u01/app/oracle/product/18.0.0/client_1
+    oracle_inventory: /u01/app/oracleInventory
+    client_file: LINUX.X64_180000_client.zip
+    space_needed_gb: 5
+    desc: "Oracle Database Client 18c"

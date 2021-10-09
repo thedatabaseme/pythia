@@ -1,0 +1,8 @@
+{{ duplicate_target_sid }} =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = {{ duplicate_target_host }})(PORT = {{ listener_port }}))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = {{ duplicate_target_sid }})
+    )
+  )

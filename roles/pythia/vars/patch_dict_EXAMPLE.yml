@@ -1,0 +1,49 @@
+###################################################################################
+# Patch Dictionary for Pythia
+# patch_id: Unique Patch ID
+# patch_dir: Path where the patch is located, relative to the local_stage_directory
+#            variable. Must reside under local_stage_directory.
+# patch_file: Filename of the Patch Archive.
+# opatch_dir: Path where the needed OPATCH for patch installation is located.
+#             Relative to the local_stage_directory variable. Must reside under
+#             local_stage_directory.
+# opatch_file: Filename of the needed OPATCH archive.
+# desc: Description of the Patch
+################################################################################### 
+
+patch:
+  30125133:
+    patch_id: 30125133
+    patch_dir: patches
+    patch_file: p30125133_190000_Linux-x86-64.zip
+    opatch_dir:
+    opatch_file: p6880880_122010_Linux-x86-64.zip
+    desc: "Database Release Update 19.5.0"
+  30557433:
+    patch_id: 30557433
+    patch_dir: patches
+    patch_file: p30557433_190000_Linux-x86-64.zip
+    opatch_dir:
+    opatch_file: p6880880_122010_Linux-x86-64.zip
+    desc: "Database Release Update 19.6.0"
+  31771877:
+    patch_id: 31771877
+    patch_dir: patches
+    patch_file: p31771877_190000_Linux-x86-64.zip
+    opatch_dir:
+    opatch_file: p6880880_122010_Linux-x86-64.zip
+    desc: "Database Release Update 19.9.0"
+  30138470:
+    patch_id: 30138470
+    patch_dir: patches
+    patch_file: p30138470_122010_Linux-x86-64.zip
+    opatch_dir:
+    opatch_file: p6880880_122010_Linux-x86-64.zip
+    desc: "Database Oct 2019 Release Update 12.2.0.1.191015"
+  30112122:
+    patch_id: 30112122
+    patch_dir: patches
+    patch_file: p30112122_180000_Linux-x86-64.zip
+    opatch_dir:
+    opatch_file: p6880880_122010_Linux-x86-64.zip
+    desc: "Database Release Update 18.8.0.0.191015"

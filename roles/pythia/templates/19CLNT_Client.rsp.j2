@@ -1,0 +1,9 @@
+oracle.install.responseFileVersion=/oracle/install/rspfmt_clientinstall_response_schema_v19.0.0
+UNIX_GROUP_NAME={{ oracle_group }}
+INVENTORY_LOCATION={{ client[client_version|string].oracle_inventory }}
+ORACLE_HOME={{ client[client_version|string].oracle_home }}
+ORACLE_BASE={{ client[client_version|string].oracle_base }}
+oracle.install.client.installType={{ client_install_type }}
+oracle.install.client.customComponents=
+oracle.install.client.schedulerAgentHostName=
+oracle.install.client.schedulerAgentPortNumber=

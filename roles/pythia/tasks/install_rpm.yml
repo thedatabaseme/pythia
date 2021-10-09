@@ -1,0 +1,37 @@
+---
+#RPM Installation Task for Pythia
+
+- name: Setting Ansible Remote Temporary Directory
+  set_fact:
+    ansible_remote_tmp: "{{ remote_stage_directory }}"
+  tags:
+    - rpm
+
+###################################################################################
+# Copy the RPM specified by the install_rpm Variable to the Target Server and
+# install it with the Package Manager running on the Target Server (e.G. yum)
+# Tag: rpm
+###################################################################################
+
+- name: Copy RPM {{ install_rpm }} to Target Server
+  become: yes
+  copy:
+    src: "{{ local_stage_directory }}/{{ rpm[install_rpm|string].rpm_dir }}/{{ rpm[install_rpm|string].rpm_file }}"
+    dest: "{{ remote_stage_directory }}/{{ rpm[install_rpm|string].rpm_file }}"
+    remote_src: no
+    mode: 0777
+  tags:
+    - rpm
+
+- name: Installing additional Software
+  include_tasks: "rpm_{{ install_rpm }}.yml"
+  tags:
+    - rpm
+
+- name: Cleanup RPM
+  become: yes
+  file:
+    path: "{{ remote_stage_directory }}/{{ rpm[install_rpm|string].rpm_file }}"
+    state: absent
+  tags:
+    - rpm

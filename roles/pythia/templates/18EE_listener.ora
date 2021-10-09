@@ -1,0 +1,17 @@
+{{ listener_prefix }}{{ oracle_sid }} =
+  (ADDRESS_LIST =
+    (ADDRESS = (PROTOCOL = tcp)(HOST = {{ ansible_hostname }})(PORT = {{ listener_port }}))
+  )
+
+SID_LIST_{{ listener_prefix }}{{ oracle_sid }} =
+  (SID_LIST =
+    (SID_DESC =
+      (ORACLE_HOME = {{ rdbms[oracle_version|string].oracle_home }})
+      (GLOBAL_DBNAME = {{ oracle_sid }})
+      (SID_NAME = {{ oracle_sid }})
+    )
+  )
+
+ADR_BASE_{{ listener_prefix }}{{ oracle_sid }} = {{ diag_dest }}
+LOGGING_{{ listener_prefix }}{{ oracle_sid }}={{ listener_logging }}
+USE_SID_AS_SERVICE_{{ listener_prefix }}{{ oracle_sid }}=ON

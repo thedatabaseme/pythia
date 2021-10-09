@@ -1,0 +1,50 @@
+####################################################################################################################
+# Patch Dictionary for Pythia
+# rdbms_dir: Path where the RDBMS is located on the Stage Directory, relative to the local_stage_directory Variable
+# rdbms_file: Filename of the RDBMS Archive
+# oracle_base: Oracle Base Directory for the specified RDBMS
+# oracle_home: Oracle Home Directory for the specified RDBMS
+# oracle_inventory: Path to the Oracle Inventory Location
+# additional_dir: You may specify an additional directory that should be created / permission set when install RDBMS
+# space_needed_gb: Space approximately in GB for installing the RDBMS. Respects, 
+#                  that there is probably a Patch installed on top
+# desc: Description of the RDBMS
+####################################################################################################################
+
+rdbms:
+  19EE:
+    rdbms_dir:
+    oracle_base: /u01/app/oracle
+    oracle_home: /u01/app/oracle/product/19.0.0/dbhome_1
+    oracle_inventory: /u01/app/oracleInventory
+    additional_dir:
+    rdbms_file: LINUX.X64_193000_db_home.zip
+    space_needed_gb: 12
+    desc: "Database RDBMS Base Release 19.3 Enterprise Edition"
+  19SE2:
+    rdbms_dir:
+    oracle_base: /u01/app/oracle
+    oracle_home: /u01/app/oracle/product/19.0.0/dbhome_1
+    oracle_inventory: /u01/app/oracleInventory
+    additional_dir:
+    rdbms_file: LINUX.X64_193000_db_home.zip
+    space_needed_gb: 12
+    desc: "Database RDBMS Base Release 19.3 Standard Edition 2"
+  18EE:
+    rdbms_dir:
+    oracle_base: /u01/app/oracle
+    oracle_home: /u01/app/oracle/product/18.0.0/dbhome_1
+    oracle_inventory: /u01/app/oracleInventory
+    additional_dir:
+    rdbms_file: LINUX.X64_180000_db_home.zip
+    space_needed_gb: 12
+    desc: "Database RDBMS Base Release 18.0 Enterprise Edition"
+  18SE2:
+    rdbms_dir:
+    oracle_base: /u01/app/oracle
+    oracle_home: /u01/app/oracle/product/19.0.0/dbhome_1
+    oracle_inventory: /u01/app/oracleInventory
+    additional_dir:
+    rdbms_file: LINUX.X64_180000_db_home.zip
+    space_needed_gb: 12
+    desc: "Database RDBMS Base Release 18.0 Standard Edition 2"

@@ -1,0 +1,123 @@
+---
+# Autostart Task for Pythia
+
+###################################################################################
+# Find out if the specified Oracle SID is running on the Target Server
+# Tag: autostart
+###################################################################################
+
+- name: Check which Oracle Home is used by {{ oracle_sid }}
+  become: yes
+  shell: "cat /etc/oratab | grep -w {{ oracle_sid }} | awk -F \":\" {'print$2'}"
+  args:
+    removes: /etc/oratab
+  register: home_list
+  tags:
+    - autostart
+
+- name: Oracle SID {{ oracle_sid }} can not be found on the Target Server
+  fail:
+    msg: "The Oracle SID {{ oracle_sid }} does not exist on the Target System"
+  when: (home_list is undefined) or (home_list.stdout_lines|length == 0)
+  tags:
+    - autostart
+
+- name: Setting Oracle Home Variable
+  set_fact:
+    oracle_home: "{{ home_list.stdout_lines[0] }}"
+  tags:
+    - autostart
+
+###################################################################################
+# Find out if Autostart is already Set for the specified Oracle SID.
+# Tag: autostart
+###################################################################################
+
+- name: Check if Autostart for DB {{ oracle_sid }} is already set
+  become: yes
+  shell: "cat /etc/oratab | grep -w {{ oracle_sid }} | awk -F \":\" {'print$3'}"
+  args:
+    removes: /etc/oratab
+  register: autostart_set
+  tags:
+    - autostart
+
+- name: Oracle DB {{ oracle_sid }} already is configured for autostart
+  assert:
+    that: autostart_set.stdout == "N"
+    fail_msg: Autostart is already set for DB {{ oracle_sid }}
+    success_msg: Autostart for Oracle DB {{ oracle_sid }} will be configured.
+  become: yes
+  tags:
+    - autostart
+
+###################################################################################
+# Copy the Linux Service File to the Target Server and deploy it.
+# Tag: autostart
+###################################################################################
+
+- name: Deploy Service File
+  template:
+    src: "roles/pythia/templates/dbora.service.j2"
+    dest: "/lib/systemd/system/dbora{{ oracle_sid }}.service"
+    owner: root
+    group: root
+    mode: 0644
+    force: no
+  become: yes
+  tags:
+    - autostart
+
+- name: Deploy DB Start Script
+  template:
+    src: "roles/pythia/templates/dbstart.j2"
+    dest: "{{ oracle_home }}/bin/dbstart"
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+    mode: 0750
+    force: yes
+  become: yes
+  become_user: "{{ oracle_user }}"
+  tags:
+    - autostart
+
+- name: Deploy DB Stop Script
+  template:
+    src: "roles/pythia/templates/dbshut.j2"
+    dest: "{{ oracle_home }}/bin/dbshut"
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+    mode: 0750
+    force: yes
+  become: yes
+  become_user: "{{ oracle_user }}"
+  tags:
+    - autostart
+
+###################################################################################
+# Setup Autostart in /etc/oratab
+# Tag: autostart
+###################################################################################
+
+- name: Setup Autostart in /etc/oratab
+  replace:
+    path: /etc/oratab
+    regexp: "{{ oracle_sid }}:{{ oracle_home }}:N"
+    replace: "{{ oracle_sid }}:{{ oracle_home }}:Y"
+  become: yes
+  tags:
+    - autostart
+
+###################################################################################
+# Reload the systemd Configuration the enable the Service.
+# Tag: autostart
+###################################################################################
+
+- name: Reload Systemd Config
+  become: yes
+  systemd:
+    daemon_reload: yes
+    enabled: yes
+    name: "dbora{{ oracle_sid }}"
+  tags:
+    - autostart

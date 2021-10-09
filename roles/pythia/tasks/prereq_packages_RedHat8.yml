@@ -1,0 +1,13 @@
+---
+# Only Run this Task when destionation Server is RHEL8 or OEL8
+
+- name: Install prerequisite Packages for Oracle Database RHEL8
+  package:
+    name: "{{ rhel8_packages }}"
+    state: present
+  when: (ansible_distribution == 'RedHat' and ansible_distribution_major_version == '8') or
+        (ansible_distribution == 'OracleLinux' and ansible_distribution_major_version == '8')
+  become: yes
+  tags:
+    - rdbms
+    - prepare

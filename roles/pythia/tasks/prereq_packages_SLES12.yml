@@ -1,0 +1,12 @@
+---
+# Only Run this Task when destionation Server is SLES12
+
+- name: Install prerequisite Packages for Oracle Database SLES12
+  package:
+    name: "{{ sles12_packages }}"
+    state: present
+  when: (ansible_distribution == 'SLES' and ansible_distribution_major_version == '12')
+  become: yes
+  tags:
+    - rdbms
+    - prepare

@@ -1,0 +1,300 @@
+#!/bin/sh
+#
+# $Id: dbshut.sh /unix/6 2017/05/24 16:20:45 suelee Exp $
+# Copyright (c) 1991, 2017, Oracle and/or its affiliates. All rights reserved.
+#
+
+###################################
+# 
+# usage: dbshut $ORACLE_HOME
+#
+# This script is used to shutdown ORACLE from /etc/rc(.local).
+# It should ONLY be executed as part of the system boot procedure.
+#
+# This script will shutdown all databases listed in the oratab file
+# whose third field is a "Y" or "W".  If the third field is set to "Y" and
+# there is no ORACLE_SID for an entry (the first field is a *),
+# then this script will ignore that entry.
+#
+# This script requires that ASM ORACLE_SID's start with a +, and 
+# that non-ASM instance ORACLE_SID's do not start with a +.
+#
+# Note:
+# Use ORACLE_TRACE=T for tracing this script.
+# Oracle Net Listener is also shutdown using this script.
+#
+# The progress log for each instance shutdown is logged in file 
+# $ORACLE_BASE_HOME/rdbms/log/shutdown.log.
+#
+# On all UNIX platforms except SOLARIS
+# ORATAB=/etc/oratab
+#
+# To configure, update ORATAB with Instances that need to be shutdown
+#    Entries are of the form:
+#    $ORACLE_SID:$ORACLE_HOME:<N|Y>:
+#    An example entry:
+#    main:/usr/lib/oracle/emagent_10g:Y
+#
+#####################################
+
+trap 'exit' 1 2 3
+case $ORACLE_TRACE in
+  T) set -x ;;
+esac
+
+# Set path if path not set (if called from /etc/rc)
+SAVE_PATH=/bin:/usr/bin:/etc:${PATH} ; export PATH
+SAVE_LLP=$LD_LIBRARY_PATH
+
+# This is to bring down Oracle Net Listener
+ORACLE_HOME_LISTNER=$1
+if [ ! $ORACLE_HOME_LISTNER ] ; then
+  echo "Since ORACLE_HOME is not set, cannot auto-stop Oracle Net Listener"
+  echo "Usage: $0 ORACLE_HOME"
+else
+  # Set the ORACLE_HOME for the Oracle Net Listener, it gets reset to
+  # a different ORACLE_HOME for each entry in the oratab.
+  ORACLE_HOME=$1; export ORACLE_HOME
+
+  # Determine location of listener.log
+  ORACLE_BASE_HOME=$ORACLE_HOME
+  ORABASEHOME_EXEC=$1/bin/orabasehome
+  if [ -f $ORABASEHOME_EXEC ]; then
+    if [ -x $ORABASEHOME_EXEC ]; then
+      ORACLE_BASE_HOME=`$ORABASEHOME_EXEC`
+    fi
+  fi
+  export ORACLE_BASE_HOME
+
+  ORACLE_BASE_CONFIG=$ORACLE_HOME
+  ORABASECONFIG_EXEC=$1/bin/orabaseconfig
+  if [ -f $ORABASECONFIG_EXEC ]; then
+    if [ -x $ORABASECONFIG_EXEC ]; then
+      ORACLE_BASE_CONFIG=`$ORABASECONFIG_EXEC`
+    fi
+  fi
+  export ORACLE_BASE_CONFIG
+
+  # Determine location of listener.log
+  mkdir -p -- $ORACLE_BASE_HOME/network/log
+  LOG=$ORACLE_BASE_HOME/network/log/listener.log
+
+  # Stop Oracle Net Listener
+  if [ -x $ORACLE_HOME/bin/tnslsnr ] ; then
+    echo "$0: Stopping Oracle Net Listener" >> $LOG 2>&1
+    $ORACLE_HOME/bin/lsnrctl stop {{ listener_prefix }}{{ oracle_sid }} >> $LOG 2>&1 &
+  else
+    echo "Failed to auto-stop Oracle Net Listener using $ORACLE_HOME/bin/tnslsnr"
+  fi
+fi
+
+# Set this in accordance with the platform
+ORATAB=/etc/oratab
+if [ ! $ORATAB ] ; then
+  echo "$ORATAB not found"
+  exit 1;
+fi
+
+# Stops an instance
+stopinst() {
+  # Called programs use same database ID
+  ORACLE_SID=`echo $LINE | awk -F: '{print $1}' -`
+  if [ "$ORACLE_SID" = '*' ] ; then
+    ORACLE_SID=""
+  fi
+  export ORACLE_SID
+
+  # Called scripts use same home directory
+  ORACLE_HOME=`echo $LINE | awk -F: '{print $2}' -`
+  export ORACLE_HOME
+
+  ORACLE_BASE_HOME=$ORACLE_HOME
+  ORABASEHOME_EXEC=$1/bin/orabasehome
+  if [ -f $ORABASEHOME_EXEC ]; then
+    if [ -x $ORABASEHOME_EXEC ]; then
+      ORACLE_BASE_HOME=`$ORABASEHOME_EXEC`
+    fi
+  fi
+  export ORACLE_BASE_HOME
+
+  ORACLE_BASE_CONFIG=$ORACLE_HOME
+  ORABASECONFIG_EXEC=$ORACLE_HOME/bin/orabaseconfig
+  if [ -f $ORABASECONFIG_EXEC ]; then
+    if [ -x $ORABASECONFIG_EXEC ]; then
+      ORACLE_BASE_CONFIG=`$ORABASECONFIG_EXEC`
+    fi
+  fi
+  export ORACLE_BASE_CONFIG
+
+  # Put $ORACLE_HOME/bin into PATH and export.
+  PATH=$ORACLE_HOME/bin:${SAVE_PATH} ; export PATH
+  # add for bug 652997
+  LD_LIBRARY_PATH=${ORACLE_HOME}/lib:${SAVE_LLP} ; export LD_LIBRARY_PATH
+  PFILE=${ORACLE_BASE_CONFIG}/dbs/init${ORACLE_SID}.ora
+
+  # See if it is a V6 or V7 database
+  VERSION=undef
+  if [ -f $ORACLE_HOME/bin/sqldba ] ; then
+    SQLDBA=sqldba
+    VERSION=`$ORACLE_HOME/bin/sqldba command=exit | awk '
+      /SQL\*DBA: (Release|Version)/ {split($3, V, ".") ;
+      print V[1]}'`
+    case $VERSION in
+      "6") ;;
+      *) VERSION="internal" ;;
+    esac
+  else
+    if [ -f $ORACLE_HOME/bin/svrmgrl ] ; then
+      SQLDBA=svrmgrl
+      VERSION="internal"
+    else
+      SQLDBA="sqlplus /nolog"
+    fi
+  fi
+
+  case $VERSION in
+    "6")  sqldba command=shutdown ;;
+    "internal")  $SQLDBA <<EOF
+connect internal
+shutdown immediate
+EOF
+     ;;
+     *)  $SQLDBA <<EOF
+connect / as sysdba
+shutdown immediate
+quit
+EOF
+     ;;
+  esac
+
+  if test $? -eq 0 ; then
+    echo "${INST} \"${ORACLE_SID}\" shut down."
+  else
+    echo "${INST} \"${ORACLE_SID}\" not shut down."
+  fi
+}
+
+#
+# Loop for every entry in oratab file and and try to shut down
+# that ORACLE
+#
+# Following loop shuts down 'Database Instance[s]' with 'Y' entry
+
+cat $ORATAB | while read LINE
+do
+  case $LINE in
+  \#*)                ;;        #comment-line in oratab
+  *)
+  ORACLE_SID=`echo $LINE | awk -F: '{print $1}' -`
+  if [ "$ORACLE_SID" = '*' ] ; then
+      # NULL SID - ignore
+      ORACLE_SID=""
+      continue
+  fi
+  # Proceed only if last field is 'Y'
+  if [ "`echo $LINE | awk -F: '{print $NF}' -`" = "Y" ] ; then
+    if [ `echo $ORACLE_SID | cut -b 1` != '+' ]; then
+      INST="Database instance"
+      ORACLE_HOME=`echo $LINE | awk -F: '{print $2}' -`
+
+      ORACLE_BASE_HOME=$ORACLE_HOME
+      ORABASEHOME_EXEC=$ORACLE_HOME/bin/orabasehome
+      if [ -f $ORABASEHOME_EXEC ]; then
+        if [ -x $ORABASEHOME_EXEC ]; then
+          ORACLE_BASE_HOME=`$ORABASEHOME_EXEC`
+        fi
+      fi
+
+      # file for logging script's output
+      mkdir -p -- $ORACLE_BASE_HOME/rdbms/log
+      LOG=$ORACLE_BASE_HOME/rdbms/log/shutdown.log
+
+      echo "Processing $INST \"$ORACLE_SID\": log file $LOG"
+      stopinst >> $LOG 2>&1
+    fi
+  fi
+  ;;
+  esac
+done
+
+#
+# Following loop shuts down 'Database Instance[s]' with 'W' entry
+#
+cat $ORATAB | while read LINE
+do
+  case $LINE in
+  \#*)                ;;        #comment-line in oratab
+  *)
+  ORACLE_SID=`echo $LINE | awk -F: '{print $1}' -`
+  if [ "$ORACLE_SID" = '*' ] ; then
+      # NULL SID - ignore
+      ORACLE_SID=""
+      continue
+  fi
+  # Proceed only if last field is 'W'
+  if [ "`echo $LINE | awk -F: '{print $NF}' -`" = "W" ] ; then
+    if [ `echo $ORACLE_SID | cut -b 1` != '+' ]; then
+      INST="Database instance"
+      ORACLE_HOME=`echo $LINE | awk -F: '{print $2}' -`
+
+      ORACLE_BASE_HOME=$ORACLE_HOME
+      ORABASEHOME_EXEC=$ORACLE_HOME/bin/orabasehome
+      if [ -f $ORABASEHOME_EXEC ]; then
+        if [ -x $ORABASEHOME_EXEC ]; then
+          ORACLE_BASE_HOME=`$ORABASEHOME_EXEC`
+        fi
+      fi
+
+      # file for logging script's output
+      mkdir -p -- $ORACLE_BASE_HOME/rdbms/log
+      LOG=$ORACLE_BASE_HOME/shutdown.log
+
+      echo "Processing $INST \"$ORACLE_SID\": log file $LOG"
+      stopinst >> $LOG 2>&1
+    fi
+  fi
+  ;;
+  esac
+done
+
+#
+# Following loop shuts down 'ASM Instance[s]'
+#
+
+cat $ORATAB | while read LINE
+do
+  case $LINE in
+    \#*)                ;;        #comment-line in oratab
+    *)
+    ORACLE_SID=`echo $LINE | awk -F: '{print $1}' -`
+    if [ "$ORACLE_SID" = '*' ] ; then
+      # NULL SID - ignore
+      ORACLE_SID=""
+      continue
+    fi
+    # Proceed only if last field is 'Y'.
+    # Entries whose last field is not Y or N are not DB entry, ignore them.
+    if [ "`echo $LINE | awk -F: '{print $NF}' -`" = "Y" ] ; then
+      if [ `echo $ORACLE_SID | cut -b 1` = '+' ]; then
+        INST="ASM instance"
+        ORACLE_HOME=`echo $LINE | awk -F: '{print $2}' -`
+
+        ORACLE_BASE_HOME=$ORACLE_HOME
+        ORABASEHOME_EXEC=$ORACLE_HOME/bin/orabasehome
+        if [ -f $ORABASEHOME_EXEC ]; then
+          if [ -x $ORABASEHOME_EXEC ]; then
+            ORACLE_BASE_HOME=`$ORABASEHOME_EXEC`
+          fi
+        fi
+
+        # file for logging script's output
+        mkdir -p -- $ORACLE_BASE_HOME/rdbms/log
+        LOG=$ORACLE_BASE_HOME/shutdown.log
+
+        echo "Processing $INST \"$ORACLE_SID\": log file $LOG"
+        stopinst >> $LOG 2>&1
+      fi
+    fi
+  ;;
+  esac
+done

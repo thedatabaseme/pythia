@@ -1,0 +1,293 @@
+---
+#Oracle Patching Task for Pythia
+
+- name: Setting Ansible Remote Temporary Directory
+  set_fact:
+    ansible_remote_tmp: "{{ remote_stage_directory }}"
+  tags:
+    - patch
+
+- name: Print Patch Dictionary for Patch {{ install_patch }}
+  debug:
+    msg: "{{ patch[install_patch|int] }}"
+  tags:
+    - patch
+    - patchonly
+
+###################################################################################
+# Check if the specified Patch is already installed in the specified Oracle Home
+# Tag: patch, patchonly
+###################################################################################
+
+- name: Check if Patch {{ install_patch }} already installed on RDBMS
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch lsinventory"
+  register: result
+  tags:
+    - patch
+    - patchonly
+
+- name: Patch is already installed on RDBMS
+  fail:
+    msg: "The Patch {{ install_patch }} is already applied on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}"
+  when: (install_patch|string in result.stdout)
+  tags:
+    - patch
+    - patchonly
+
+###################################################################################
+# Deploy the needed OPatch Version for the specified Patch.
+# Needed OPatch Version is specified in the Patch Dictionary patch_dict.yml
+# Tag: patch
+###################################################################################
+
+- name: Deploy needed OPATCH Version
+  become: yes
+  become_user: "{{ oracle_user }}"
+  unarchive:
+    src: "{{ local_stage_directory }}/{{ patch[install_patch|int].opatch_dir }}/{{ patch[install_patch|int].opatch_file }}"
+    dest: "{{ rdbms[oracle_version|string].oracle_home }}"
+    remote_src: no
+    mode: 0755
+    group: "{{ oracle_group }}"
+    owner: "{{ oracle_user }}"
+  tags:
+    - patch
+
+###################################################################################
+# Copy and uncompress the Patch Archive into the Remote Staging Area. Cleanup
+# the Staging Area after uncompressing the Patch Archive.
+# Tag: patch
+###################################################################################
+
+- name: Copy Oracle Patch Archive to Staging Area {{ remote_stage_directory }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  copy:
+    src: "{{ local_stage_directory }}/{{ patch[install_patch|int].patch_dir }}/{{ patch[install_patch|int].patch_file }}"
+    dest: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_file }}"
+    remote_src: no
+    owner: "{{ oracle_user }}"
+    group: "{{ oracle_group }}"
+  tags:
+    - patch
+
+- name: Unzip Patch in Remote Stage Directory
+  become: yes
+  become_user: "{{ oracle_user }}"
+  unarchive:
+    src: "{{remote_stage_directory }}/{{ patch[install_patch|int].patch_file }}"
+    dest: "{{ remote_stage_directory }}"
+    remote_src: yes
+    mode: 0755
+    group: "{{ oracle_group }}"
+    owner: "{{ oracle_user }}"
+  tags:
+    - patch
+
+- name: Cleanup Staging Area
+  file:
+    path: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_file }}"
+    state: absent
+  become: yes
+  become_user: "{{ oracle_user }}"
+  tags:
+    - patch
+
+###################################################################################
+# Run OPatch Prechecks to find out if the Patch is compatible with the specified
+# Oracle Home.
+# Tag: db
+###################################################################################
+
+- name: Check if Patch is compatible with installed RDBMS
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./"
+  args:
+    chdir: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_id }}"
+  register: result
+  tags:
+    - patch
+    - patchonly
+
+- name: Analyze Opatch prereq result
+  fail:
+    msg: "OPatch Prerequisite Check has failed. See Logfile under {{ rdbms[oracle_version|string].oracle_home }}/cfgtoollogs/opatch/ !"
+  when: "'failed' in result.stdout"
+  tags:
+    - patch
+    - patchonly
+
+###################################################################################
+# Find out if Listeners and or Databases are running under the Oracle Home that
+# is about to be patched. Found Listeners and Databases are stopped.
+# Tag: patch, patchonly
+###################################################################################
+
+- name: Gather Listeners running on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "ps -ef | grep {{ rdbms[oracle_version|string].oracle_home }} | grep tnslsnr | grep -v grep | awk {'print$9'}"
+  register: listener_list
+  tags:
+    - patch
+    - patchonly
+
+- name: Gather Databases running on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "cat /etc/oratab | grep {{ rdbms[oracle_version|string].oracle_home }} | awk -F \":\" {'print$1'}"
+  args:
+    removes: /etc/oratab
+  register: sid_list
+  tags:
+    - patch
+    - patchonly
+
+- name: Listeners found
+  debug:
+    msg: "The following Listeners have been found running in the Oracle Home: {{ listener_list.stdout_lines }}"
+  when: (listener_list.changed) and (listener_list.stdout_lines|length > 0)
+  tags:
+    - patch
+    - patchonly
+
+- name: Databases found
+  debug:
+    msg: "The following Databases have been found running in the Oracle Home: {{ sid_list.stdout_lines }}"
+  when: (sid_list.changed) and (sid_list.stdout_lines|length > 0)
+  tags:
+    - patch
+    - patchonly
+
+- name: Stopping all Listeners on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/lsnrctl stop {{ item }}"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
+  when: (listener_list.stdout_lines|length > 0)
+  with_items: "{{ listener_list.stdout_lines }}"
+  tags:
+    - patch
+    - patchonly 
+
+- name: Stopping all Databases on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "echo shutdown immediate | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
+    ORACLE_SID: "{{ item }}"
+  when: (sid_list.stdout_lines|length > 0)
+  with_items: "{{ sid_list.stdout_lines }}"
+  tags:
+    - patch
+    - patchonly
+
+###################################################################################
+# Apply the specified Patch to the Oracle Home
+# Tag: patch, patchonly
+###################################################################################
+
+- name: Apply Patch {{ install_patch }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch apply -silent -oh {{ rdbms[oracle_version|string].oracle_home }}"
+  args:
+    chdir: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_id }}"
+  register: result
+  tags:
+    - patch
+    - patchonly
+
+- name: Analyze Opatch apply result
+  fail:
+    msg: "OPatch Apply has failed. See Logfile under {{ rdbms[oracle_version|string].oracle_home }}/cfgtoollogs/opatch/ !"
+  when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout) or ("failed" in result.stdout)
+  tags:
+    - patch
+    - patchonly
+
+###################################################################################
+# The before found Listeners and Databases are now started again after the Patch
+# is applied.
+# Tag: patch, patchonly
+###################################################################################
+
+- name: Start Listeners
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/lsnrctl start {{ item }}"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
+  when: (listener_list.stdout|length > 0)
+  with_items: "{{ listener_list.stdout_lines }}"
+  tags:
+    - patch
+    - patchonly
+
+- name: Start Databases
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "echo startup | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
+    ORACLE_SID: "{{ item }}"
+  when: (sid_list.stdout_lines|length > 0)
+  with_items: "{{ sid_list.stdout_lines }}"
+  tags:
+    - patch
+    - patchonly
+
+###################################################################################
+# The Database itself is not patched with datapatch.
+# Tag: patch, patchonly
+###################################################################################
+
+- name: Running Datapatch
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/datapatch -verbose"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
+    ORACLE_SID: "{{ item }}"
+  when: (sid_list.stdout_lines|length > 0)
+  with_items: "{{ sid_list.stdout_lines }}"
+  tags:
+    - patch
+    - patchonly
+
+###################################################################################
+# Cleanup of the Remote Staging Area and if specified by the cleanup Tag, the
+# Backups of the Oracle Patch(set) is removed.
+# Tag: patch, cleanup
+###################################################################################
+
+- name: Cleanup Remote Staging Area
+  become: yes
+  become_user: "{{ oracle_user }}"
+  file:
+    path: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_id }}"
+    state: absent
+  tags:
+    - cleanup
+    - patch
+
+- name: Cleanup OPatch Backups 1/2
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch util Cleanup -silent -oh {{ rdbms[oracle_version|string].oracle_home }}"
+  tags:
+    - cleanup
+
+- name: Cleanup OPatch Backups 2/2
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "rm -rf {{ rdbms[oracle_version|string].oracle_home }}/.patch_storage/{{ patch[install_patch|int].patch_id }}*"
+  args:
+    warn: no
+  tags:
+    - cleanup

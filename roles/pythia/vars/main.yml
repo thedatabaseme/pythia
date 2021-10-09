@@ -1,0 +1,285 @@
+---
+# main.yml Variables (can be set when calling the playbook, see Examples):
+#  - oracle_user (Default oracle): OS Username under which the Database is running
+#  - oracle_group (Default dba): OS Groupname under which the Database is running
+#  - oracle_uid (Default 1500): User ID of the Oracle OS User
+#  - oracle_gid (Default 1500): Group ID of the Oracle OS Group
+#  - oracle_home_dir (Default /home/{{ oracle_user }}: Home Directory of the Oracle OS User
+#  - local_stage_directory (Default /mnt/oracle_stage): Software Stage Directory on the Ansible Control Server
+#  - remote_stage_directory (Default /oracle/sources): Software Stage Directory on the Target Server. E.G. Patches are staged here before applying it to a RDBMS or Database
+#  - local_sql_stage_directory (Default roles/pythia/files/default): Stage Directory for SQL Scripts on Ansible Control Server.
+#  - remote_sql_stage_directory (Default {{ remote_stage_directory }}/scripts): Stage Directory for SQL Scripts on Target Server.
+#  - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy or change. The Version String has to be existant within the RDBMS Dictionary (rdbms_dict.yml under vars folder)
+#  - client_version (Default 19CLNT): The Version of the Oracle Client you want to deploy. The Version String has to be existant within the Client Dictionary (client_dict.yml under vars folder)
+#  - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only needed when starting the playbook with the "db" tag, for creating a Database.
+#  - space_needed_gb: Space approximately in GB for installing the RDBMS. Respects, that there is probably a Patch installed on top. OVERLOADS rdbms_dict.yml space_needed_gb. SHOULD NOT BE SPECIFIED WITHIN HERE. SHOULD BE SPECIFIED AS EXTRA VARIABLE IN PLAYBOOK CALL.
+#  - nls_length_semantics (Default BYTE): Oracle Parameter NLS_LENGTH_SEMANTICS, can be BYTE or CHAR. When set, it will be placed in the Database creation Response Files
+#  - character_set (Default AL32UTF8): Character Set of the Database when creating.
+#  - national_character_set (Default AL16UTF16): National Character Set of the Database when creating
+#  - sga_max_size (Default 2): Size of the SGA in GB of the Oracle Database to be created. Both Parameters sga_max_size and sga_target will be set to this value for your Instance Configuration
+#  - pga_aggregate_target (Default 1): Size of the PGA in GB of the Oracle Database to be created. Will be set as Oracle Parameter pga_aggregate_target
+#  - use_large_pages (Default TRUE): Can be TRUE or ONLY. Will automatically be set to ONLY when the hugepage tag is specified
+#  - management_pack_access (Default NONE): Controls the Parameter control_management_pack_access when creating a new Database. Values can be in: "NONE", "DIAGNOSTIC" or "DIAGNOSTIC+TUNING". Be sure, that you have licenced the corrent Enterprise Option (Tuning and or Diagnostic Pack) before setting this Parameter other than NONE. In the Standard Edition 2 of Oracle, it is not possible to licence this Features, so the Variable will not have impact on this Response File Templates.
+#  - install_patch (Default NULL): The Patch ID you want to install on a new Database or an existing RDBMS / Database. Only needed when starting the playbook with the "patch" or "patchonly" tag. Optional when starting the playbook with the "db" or "rdbms" tag. The Value of the install_patch Variable has to be defined in the patch_dictionary.yml File under the vars folder.
+#  - install_rpm (Default NULL): The RPM Name you want to install on the Database Server. Only needed when starting the playbook with the "rpm" tag. The Value of the install_rpm Variable has to be defined in the rpm_dictionary.yml File under the vars folder.
+#  - reboot_required (Default false): Just for initializing the Variable. Must not be modified
+#  - reboot_ack (false): Must be specified when calling the playbook. Configuring Hugepages mostly need a reboot. This acknowledges the reboot. Must be specified when tagging hugepage or converttohugepage
+#  - listener_port (Default 1521): Port on which a new listener will be created. Only needed when starting the playbook with the "db" or "listener" tag.
+#  - listener_prefix (Default LSNR_): The Prefix with which a new listener will be created after the Database creation. The SID of the Database will always be appended to the prefix. Only needed when starting the playbook with the "db" or "listener" tag.
+#  - emexpress (Default DBEXPRESS): Specifies if the EM Express should be installed / configured when creating a Database. There are two valid values for this Variable: DBEXPRESS and NONE
+#  - autoextend (Default false): Specifies if the created Datafiles should be autoextensible or not
+#  - listener_logging (Default OFF): Specifies if a created listener will be configured to log or not. Can be either OFF or ON.
+#  - generated_password: A Password generator which is used for generating a complex password for the Oracle OS User when it is created. If so, the password will be printed.
+#  - generated_db_password: A Password generator which is used for generating a less complex password for the Oracle Database Users SYS and SYSTEM when creating a database.
+#  - generated_default_password: A Password generator which is used for generating a less complex password for the Oracle Database Default Users when creating a database.
+#  - sles15_packages, sles12_packages, rhel7_packages, rhel8_packages: A list of Packages that will be installed before installing the Oracle RDBMS Software. The list can be found in the Oracle Installation Guide Documentation for each OS.
+#  - shmall (Default 2097152): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
+#  - shmmax (Default 4294967295): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
+#  - current_shmall (Default 0): Just for initializing the Variable. Must not be modified
+#  - current_shmmax (Default 0): Just for initializing the Variable. Must not be modified
+#  - current_hugepages (Default 0): Just for initializing the Variable. Must not be modified
+#  - hugepages (Default 0): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
+#  - client_install_type (Default Administrator): Choose Which Client Install Type you want to install. Can be Administrator, Runtime, InstantClient or Custom
+#  - duplicate_source_host (Default NULL): The source host on which the duplicate_source_sid is running. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
+#  - duplicate_target_host (Default NULL): The target host on which the duplicate_target_sid is running. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
+#  - duplicate_source_sid (Default NULL): The source SID of the Database to duplicate. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
+#  - duplicate_target_sid (Default NULL): The target SID of the Database to duplicate to. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
+#  - duplicate_remove_target (Default False): Controls if you have acknowledged that the Target Database will be removed before starting the actual duplicate
+#  - duplicate_preserve_parameter (Default source): Controls which parameters are considered during Duplication. Can be either source or target. So either the Source DBs Parameters will be preserved or the Target DBs Parameters will be preserved
+#  - duplicate_preserve_passwords (Default true): Controls if you want to preserve the Passwords of an already existing Target Database and set them after Duplication
+#  - duplicate_preserve_pwd_user_list (Default 'SYS','SYSTEM','DBSNMP'): A List of Users (comma separated and in Quotes) of which the Passwords should be preserved
+#  - duplicate_clone_spfile (Default spfile): Will be set to preservespfile when duplicate_preserve_parameter is set to target. Must not be modified
+#  - duplicate_rate_limit_per_channel (Default 40M): Controls the RMAN RATE Limit that comes to play in a duplicate job. Each Channel will not exceed this Rate in Byte while doings a duplicate.
+#  - duplicate_max_runtime (Default 54000): Number of Seconds of the maximum RMAN Duplicate runtime.
+#  - duplicate_run_post_script (Default false): Controls if some SQL Script should be run in Post-processing (so after the duplicate has finished). The SQL Script shoudl be placed under files/default/duplicate_<duplicate_source_sid>_post.sql
+#  - oracle_source_version (Default 18EE): The version of the Database to upgrade. This is needed for checking the oracle home directory.
+#  - oracle_target_version: (Default 19EE): The version the Database will be upgraded to. This is needed for checking the oracle home directory.
+#  - upgrade_log_dir: ("/oracle/cfgtoollogs/autoupgrade/<date><time>): Creates a path for a upgrade log directory
+#  - upgrade_mode (Default: analyze): Defines the mode the autoupgrade is running at. Options: analyze / fixup / deploy
+#  - autoupgrade_jar_dir (Default: /db/oracle/19/rdbms/linux/x86_64/upgrade): Path where the up to date autoupgrade.jar is located, relative to the local_stage_directory variable. Must reside under local_stage_directory
+#  - create_grp (Default: no): Controls if a Restore Point is made during an Autoupgrade Process
+#  - sqlscriptoutput (Default false): Controls if the Output of a executed SQL Script will be displayed or not
+
+# vars file for pythia
+# Oracle related Variables
+oracle_user: oracle
+oracle_group: dba
+oracle_home_dir: /home/{{ oracle_user }}
+oracle_uid: 1500
+oracle_gid: 1500
+nls_length_semantics: "BYTE"
+character_set: "AL32UTF8"
+national_character_set: "AL16UTF16"
+management_pack_access: "NONE"
+sga_max_size: 2
+pga_aggregate_target: 1
+use_large_pages: "TRUE"
+listener_port: "1521"
+listener_prefix: "LSNR_"
+emexpress: "DBEXPRESS"
+autoextend: "false"
+listener_logging: "OFF"
+sqlscriptoutput: false
+
+# OS Kernel Parameter Variables. Will be calculated during Playbook Run. Must not be set here
+shmall: 2097152
+shmmax: 4294967295
+current_shmall: 0
+current_shmmax: 0
+hugepages: 0
+current_hugepages: 0
+
+# Stage and Script Directories
+local_stage_directory: /mnt/oracle_stage
+remote_stage_directory: /oracle/sources
+local_sql_stage_directory: roles/pythia/files/default
+remote_sql_stage_directory: "{{ remote_stage_directory }}/scripts"
+
+# Control Variables for Installation
+oracle_version: 19EE
+oracle_sid: ""
+install_patch: ""
+install_rpm: ""
+reboot_required: false
+reboot_ack: false
+sysctl_stable: true
+client_version: 19CLNT
+client_install_type: "Administrator"
+
+#Control Variables for Upgrade
+oracle_source_version: 18EE
+oracle_target_version: 19EE 
+upgrade_log_dir: "/oracle/cfgtoollogs/autoupgrade/{{ ansible_date_time.date }}_{{ ansible_date_time.time }}"
+upgrade_mode: analyze
+autoupgrade_jar_dir: /db/oracle/19/rdbms/linux/x86_64/upgrade
+create_grp: no
+
+# Control Variables for Duplicate
+duplicate_source_host: ""
+duplicate_target_host: ""
+duplicate_source_sid: ""
+duplicate_target_sid: ""
+duplicate_remove_target: false
+duplicate_preserve_parameter: "source"
+duplicate_rate_limit_per_channel: "40M"
+duplicate_clone_spfile: "spfile"
+duplicate_max_runtime: 54000
+duplicate_run_post_script: false
+duplicate_preserve_passwords: true
+duplicate_preserve_pwd_user_list: "'SYS','SYSTEM','DBSNMP'"
+
+# Overloaded Variables. Should not be set here
+space_needed_gb: 0
+
+# Password Generator
+generated_password: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters,digits,punctuation') }}"
+generated_db_password: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters,digits') }}"
+generated_default_password: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters,digits') }}"
+
+sles15_packages:
+  - bc
+  - binutils
+  - glibc
+  - glibc-devel
+  - libaio-devel
+  - libaio1
+  - libX11-6
+  - libXau6
+  - libXext-devel
+  - libXext6
+  - libXi-devel
+  - libXi6
+  - libXrender-devel
+  - libXrender1
+  - libXtst6
+  - libcap-ng-utils
+  - libcap-ng0
+  - libcap-progs
+  - libcap1
+  - libcap2
+  - libelf1
+  - libgcc_s1
+  - libjpeg8
+  - libpcap1
+  - libpcre1
+  - libpcre16-0
+  - libpng16-16
+  - libstdc++6
+  - libtiff5
+  - libgfortran4
+  - make
+  - mksh
+  - net-tools
+  - nfs-kernel-server
+  - pixz
+  - rdma-core
+  - rdma-core-devel
+  - smartmontools
+  - sysstat
+  - xorg-x11-libs
+  - xz
+  - psmisc
+  - acl
+
+sles12_packages:
+  - bc
+  - binutils
+  - glibc
+  - glibc-devel
+  - libX11-6
+  - libXau6
+  - libXtst6
+  - libcap-ng-utils
+  - libcap-ng0
+  - libcap-progs
+  - libcap1
+  - libcap2
+  - libelf-devel
+  - libgcc_s1
+  - libjpeg-turbo
+  - libjpeg62
+  - libjpeg62-turbo
+  - libpcap1
+  - libpcre1
+  - libpcre16-0
+  - libpng16-16
+  - libstdc++6
+  - libtiff5
+  - libaio-devel
+  - libaio1
+  - libXrender1
+  - make
+  - mksh
+  - net-tools
+  - nfs-kernel-server
+  - pixz
+  - rdma-core
+  - rdma-core-devel
+  - smartmontools
+  - sysstat
+  - xorg-x11-libs
+  - xz
+  - psmisc
+  - acl
+
+rhel7_packages:
+  - bc
+  - binutils
+  - compat-libcap1
+  - compat-libstdc++-33.x86_64
+  - glibc
+  - glibc-devel
+  - ksh
+  - libaio
+  - libaio-devel
+  - libX11
+  - libXau
+  - libXi
+  - libXtst
+  - libXrender-devel
+  - libXrender
+  - libgcc
+  - libstdc++
+  - libstdc++-devel
+  - libxcb
+  - make
+  - nfs-utils
+  - net-tools
+  - python
+  - python-configshell
+  - python-rtslib
+  - python-six
+  - smartmontools
+  - sysstat
+  - targetcli
+  - psmisc
+  - acl
+
+rhel8_packages:
+  - bc
+  - binutils
+  - elfutils-libelf
+  - elfutils-libelf-devel
+  - fontconfig-devel
+  - glibc
+  - glibc-devel
+  - ksh
+  - libaio
+  - libaio-devel
+  - libXrender
+  - libX11
+  - libXau
+  - libXi
+  - libXtst
+  - libgcc
+  - libnsl
+  - librdmacm
+  - libstdc++
+  - libstdc++-devel
+  - libxcb
+  - libibverbs
+  - make
+  - smartmontools
+  - sysstat
+  - psmisc
+  - acl

@@ -1,0 +1,159 @@
+---
+##################################################################################
+# Main Task File for Pythia
+# Version 2.0.0
+# Author: Philip Haberkern
+# For more Details view README.md
+##################################################################################
+
+##################################################################################
+#    ////////////////////////// Variable Includes //////////////////////////
+##################################################################################
+- name: Include SID Directory Variables
+  include_vars:
+    file: vars/sid_directories.yml
+  tags:
+    - always
+
+- name: Include Patch Dictionary
+  include_vars:
+    file: vars/patch_dict.yml
+  tags:
+    - always
+
+- name: Include RDBMS Dictionary
+  include_vars:
+    file: vars/rdbms_dict.yml
+  tags:
+    - always
+
+- name: Include RPM Dictionary
+  include_vars:
+    file: vars/rpm_dict.yml
+  tags:
+    - always
+
+- name: Include Client Dictionary
+  include_vars:
+    file: vars/client_dict.yml
+  tags:
+    - always
+
+- name: Include Password Vault
+  include_vars:
+    file: vars/vault.yml
+  tags:
+    - duplicate
+
+##################################################################################
+#       ////////////////////////// Set Facts //////////////////////////
+##################################################################################
+
+###################################################################################
+# Set the Fact for future oracle users password. Has to be generated at this stage.
+# Else, the password would change with every selection.
+#
+# Tag: always
+###################################################################################
+
+- name: Setting Oracle Password Variables
+  set_fact:
+    oracle_user_password: "{{ generated_password }}"
+    sys_user_password: "{{ generated_db_password }}"
+    system_user_password: "{{ generated_db_password }}"
+  tags:
+    - always
+
+###################################################################################
+# Set the Fact for future default users password. Has to be generated at this stage.
+# Else, the password for the default users would be the same than for sys / system
+# users.
+#
+# Tag: always
+###################################################################################
+
+- name: Setting Default User Password Variable
+  set_fact:
+    default_user_password: "{{ generated_default_password }}"
+  tags:
+    - always
+
+##################################################################################
+#        ////////////////////////// Prechecks //////////////////////////
+##################################################################################
+
+- name: Prechecks
+  include_tasks: precheck.yml
+  tags:
+    - always
+
+##################################################################################
+#        ////////////////////////// Prerequisites //////////////////////////
+##################################################################################
+
+- name: Prerequisites
+  include_tasks: prerequisites.yml
+  tags:
+    - always
+
+##################################################################################
+#    ////////////////////////// Tasks Includes //////////////////////////
+##################################################################################
+
+- name: Install RDBMS Software {{ oracle_version }}
+  include_tasks: install_rdbms.yml
+  tags:
+    - rdbms
+
+- name: Patching RDBMS / DB with Patch {{ install_patch }}
+  include_tasks: install_patch.yml
+  tags:
+    - patch
+    - patchonly
+    - cleanup
+
+- name: Install DB {{ oracle_sid }}
+  include_tasks: install_db.yml
+  tags:
+    - db
+    - listener
+
+- name: Upgrade Oracle Database {{ oracle_sid }}
+  include_tasks: upgrade.yml
+  tags:
+    - upgrade
+
+- name: Install additional Software {{ install_rpm }}
+  include_tasks: install_rpm.yml
+  tags:
+    - rpm
+
+- name: SQL Scripts
+  include_tasks: sqlscript.yml
+  tags:
+    - sqlscript
+
+- name: Install Oracle Client
+  include_tasks: install_client.yml
+  tags:
+    - client
+
+- name: DB and Listener Autostart
+  include_tasks: autostart.yml
+  tags:
+    - autostart
+
+- name: Duplicate Oracle Database
+  include_tasks: duplicate.yml
+  tags:
+    - duplicate
+
+##################################################################################
+#  ////////////////////////// Finished Installation //////////////////////////
+##################################################################################
+
+- name: Finished Pythia
+  debug:
+    msg: "Pythia has finished successfully"
+  tags:
+    - always

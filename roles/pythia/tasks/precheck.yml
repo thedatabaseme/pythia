@@ -1,0 +1,176 @@
+---
+
+###################################################################################
+# Check if Variables are defined, needed for the specified Tag.
+# Tag: rdbms, hugepage, patch, patchonly, cleanup, rpm, db, upgrade
+###################################################################################
+
+- name: Check if Oracle Version is defined
+  fail:
+    msg: "You defined that a RDBMS should be installed, but no Oracle Version was defined in oracle_version variable!"
+  when: (oracle_version|length == 0)
+  tags:
+    - rdbms
+
+- name: Check if Client Version is definded
+  fail:
+    msg: "You defined that a Client should be installed, but no Client Version was defined in client_version variable!"
+  when: (client_version|length == 0)
+  tags:
+    - client
+
+- name: Check if sga_max_size is defined
+  fail:
+    msg: "You defined that hugepages should be configured, but no SGA Size was defined in sga_max_size variable!"
+  when: (sga_max_size == 0)
+  tags:
+    - hugepage
+    - converttohugepage
+    - db
+    - prepare
+
+- name: Check if Patch ID is defined
+  fail:
+    msg: "You defined that a patch should be installed, but no Patch ID was defined in install_patch variable!"
+  when: (install_patch|length == 0)
+  tags:
+    - patch
+    - patchonly
+    - cleanup
+
+- name: Check if Oracle SID is defined
+  fail:
+    msg: "You defined that a db should be installed or changed, but no Oracle SID was defined in oracle_sid variable!"
+  when: (oracle_sid|length == 0)
+  tags:
+    - db
+    - sqlscript
+    - autostart
+    - upgrade
+
+- name: Check if Oracle Source + Targetversion is defined
+  fail:
+    msg: "You need to specify the oracle source and target version in oracle_source_version and oracle_target_version"
+  when: ( oracle_source_version|length == 0) or ( oracle_target_version|length == 0)
+  tags:
+    - upgrade
+
+- name: Check if RPM is defined
+  fail:
+    msg: "You defined that a RPM should be installed, but no RPM was defined in install_rpm variable!"
+  when: (install_rpm|length == 0)
+  tags:
+    - rpm
+
+- name: Check if Duplicate Source and Target Variables are defined
+  fail:
+    msg: "You defined that a Duplicate should be made, but not all needed variables are defined in either duplicate_source_host, duplicate_target_host, duplicate_source_sid, duplicate_target_sid variable!"
+  when: (duplicate_source_host|length == 0) or (duplicate_target_host|length == 0) or (duplicate_source_sid|length == 0) or (duplicate_target_sid|length == 0)
+  tags:
+    - duplicate
+
+- name: Check if Parameter preserve Mode is are valid
+  fail:
+    msg: "You defined that a Duplicate should be made, but an invalid value for the Parameter preserve Mode has been selected in duplicate_preserve_parameter variable! Can be either source, target or template!"
+  when: (duplicate_preserve_parameter|length == 0) or (('source' not in duplicate_preserve_parameter) and ('target' not in duplicate_preserve_parameter))
+  tags:
+    - duplicate
+
+- name: Check if SYS Password is defined in Password Vault
+  fail:
+    msg: "You need to specify the SYS Password of your Source Database you want to duplicate into the Password Vault File vault.yml as vault_sys_{{ duplicate_source_sid }}"
+  when: "(vault_sys_{{ duplicate_source_sid }}| length == 0)"
+  tags:
+    - duplicate
+
+- name: Check if the Duplicate Post-processing SQL Script exists
+  stat:
+    path: "{{ local_sql_stage_directory }}/duplicate_{{ duplicate_source_sid }}_post.sql"
+  register: sql_post_script_status
+  when: duplicate_run_post_script|bool
+  delegate_to: localhost
+  tags:
+    - duplicate
+
+- name: Duplicate Post-processing SQL Script does not exist
+  fail:
+    msg: "You defined that a SQL Script should be run as a Post-processing Task after the Duplicate. But the SQL Script for the Database does not exist!"
+  when: (duplicate_run_post_script|bool) and (not sql_post_script_status.stat.exists)
+  tags:
+    - duplicate
+
+- name: Check if the Duplicate User List for Password preservation exists
+  stat:
+    path: "roles/pythia/vars/user_pwd_preservation_{{ duplicate_target_sid }}.yml"
+  register: user_list_for_pwd_preservation_status
+  when: duplicate_preserve_passwords|bool
+  delegate_to: localhost
+  tags:
+    - duplicate
+
+###################################################################################
+# Check if the specified Variable Values are valid
+# Tag: upgrade
+###################################################################################
+
+- name: Check if Upgrade Mode is valid
+  fail:
+    msg: "You neeed to assign a valid upgrade mode (upgrade_mode), please use analyze, fixups or deploy!"
+  when: ( "analyze" != upgrade_mode and "fixups" != upgrade_mode and "deploy" != upgrade_mode )
+  tags:
+    - upgrade
+
+###################################################################################
+# Check if the specified Variable Values are valid
+# Tag: db
+###################################################################################
+
+- name: Check if EM Express Configuration is valid
+  fail:
+    msg: "The Value of Variable emexpress must be either DBEXPRESS or NONE!"
+  when: ('DBEXPRESS' not in emexpress) and ('NONE' not in emexpress)
+  tags:
+    - db
+
+- name: Check if Listener Logging Configuration is valid
+  fail:
+    msg: "The Value of Variable listener_logging must be either OFF or ON!"
+  when: ('OFF' not in listener_logging) and ('ON' not in listener_logging)
+  tags:
+    - db
+    - listener
+
+- name: Check if Management Pack Access Configuration is valid
+  fail:
+    msg: "The Value of Variable management_pack_access must be either NONE or DIAGNOSTIC or DIAGNOSTIC+TUNING!"
+  when: ('NONE' not in management_pack_access) and ('DIAGNOSTIC' not in management_pack_access) and ('DIAGNOSTIC+TUNING' not in management_pack_access)
+  tags:
+    - db
+
+###################################################################################
+# Check if the specified Variables are present in the according Dictionary
+# Tag: rdbms, hugepage, patch, patchonly, cleanup, rpm
+###################################################################################
+
+- name: Check if specified Patch ID is in Dictionary
+  fail:
+    msg: "The given Patch ID {{ install_patch }} is not defined in the Patch dictionary patch_dict.yml!"
+  when: "install_patch|int not in patch"
+  tags:
+    - patch
+    - patchonly
+    - cleanup
+
+- name: Check if specified RPM is in Dictionary
+  fail:
+    msg: "The given RPM {{ install_rpm }} is not defined in the RPM dictionary rpm_dict.yml!"
+  when: "install_rpm|string not in rpm"
+  tags:
+    - rpm
+
+- name: Check if specified RDBMS Version is in Dictionary
+  fail:
+    msg: "The given RDBMS Version {{ oracle_version }} is not defined in the RDBMS dictionary rdbms_dict.yml!"
+  when: "oracle_version|string not in rdbms"
+  tags:
+    - rdbms

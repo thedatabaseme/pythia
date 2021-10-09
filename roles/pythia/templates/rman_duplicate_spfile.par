@@ -1,0 +1,11 @@
+run{
+allocate auxiliary channel aux1 device type disk rate {{ duplicate_rate_limit_per_channel }};
+allocate auxiliary channel aux2 device type disk rate {{ duplicate_rate_limit_per_channel }};
+duplicate database to {{ duplicate_target_sid }} from active database using backupset
+spfile
+parameter_value_convert '{{ duplicate_source_sid }}', '{{ duplicate_target_sid }}'
+set db_file_name_convert='{{ duplicate_source_sid }}','{{ duplicate_target_sid }}'
+set log_file_name_convert='{{ duplicate_source_sid }}','{{ duplicate_target_sid }}'
+set log_archive_dest_1='LOCATION=/db_data/{{ duplicate_target_sid }}/archive'
+nofilenamecheck;
+}

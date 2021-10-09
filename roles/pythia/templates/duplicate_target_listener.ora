@@ -1,0 +1,17 @@
+{{ listener_prefix }}{{ duplicate_target_sid }} =
+  (ADDRESS_LIST =
+    (ADDRESS = (PROTOCOL = tcp)(HOST = {{ duplicate_target_host }})(PORT = {{ listener_port }}))
+  )
+
+SID_LIST_{{ listener_prefix }}{{ duplicate_target_sid }} =
+  (SID_LIST =
+    (SID_DESC =
+      (ORACLE_HOME = {{ duplicate_source_home.stdout }})
+      (GLOBAL_DBNAME = {{ duplicate_target_sid }})
+      (SID_NAME = {{ duplicate_target_sid }})
+    )
+  )
+
+ADR_BASE_{{ listener_prefix }}{{ duplicate_target_sid }} = /db_data/{{ duplicate_target_sid }}/dump
+LOGGING_{{ listener_prefix }}{{ duplicate_target_sid }}={{ listener_logging }}
+USE_SID_AS_SERVICE_{{ listener_prefix }}{{ duplicate_target_sid }}=ON

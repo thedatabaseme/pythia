@@ -1,0 +1,12 @@
+---
+# Only Run this Task when destionation Server is CentOS8
+
+- name: Install prerequisite Packages for Oracle Database CentOS8
+  package:
+    name: "{{ rhel8_packages }}"
+    state: present
+  when: (ansible_distribution == 'CentOS' and ansible_distribution_major_version == '8')
+  become: yes
+  tags:
+    - rdbms
+    - prepare

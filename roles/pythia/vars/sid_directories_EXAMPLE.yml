@@ -1,0 +1,36 @@
+---
+
+#  - sid_directory_list: A list of Directories that are created when installing a Database. All Directories that are configured in the Response Files for Database Creation (can be found under the template folder) are created before installing the database. If you want to change your Datafile, Redo Log Location, you may also have to change the list of Directories that are created here.
+#  - diag_dest: Specifies the Diagnostic Dest. This Variable is referenced in the DBCA Templates and the Listener configuration Templates
+#  - fast_recovery_area: Specifies the Fast Recovery Area location of your Database (db_recovery_file_dest). This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
+#  - admin_dest: Specifies the Admin Destination Folder for your Database Installation. Here one of the controlfile will be places. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
+#  - data_dest: Specifies the Location of the Database Datafiles. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
+#  - temp_dest: Specifies the Location of the Database Tempfiles. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
+#  - redo_dest1, redo_dest2: Specifies the Location of the Online Redo Logs. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
+#  - archive_dest: Specifies the Location of the Archived Redo Logs. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
+#  - audit_dest: Specifies the Location of the Audit Files. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
+
+diag_dest: "/u02/oradata/{{ oracle_sid }}/dump/"
+fast_recovery_area: "/u02/oradata/{{ oracle_sid }}/fast_recovery_area/"
+admin_dest: "/u02/oradata/{{ oracle_sid }}/admin/"
+data_dest: "/u02/oradata/{{ oracle_sid }}/data/"
+temp_dest: "/u02/oradata/{{ oracle_sid }}/temp/"
+redo_dest1: "/u02/oradata/{{ oracle_sid }}/redo1/"
+redo_dest2: "/u02/oradata/{{ oracle_sid }}/redo2/"
+archive_dest: "/u02/oradata/{{ oracle_sid }}/archive/"
+audit_dest: "/u02/oradata/{{ oracle_sid }}/audit/"
+
+sid_directory_list:
+  - "/u02/"
+  - "/u02/oradata/"
+  - "/u02/oradata/{{ oracle_sid }}/"
+  - "{{ data_dest }}"
+  - "{{ temp_dest }}"
+  - "{{ redo_dest1 }}"
+  - "{{ redo_dest2 }}"
+  - "{{ archive_dest }}"
+  - "{{ admin_dest }}"
+  - "{{ diag_dest }}"
+  - "{{ fast_recovery_area }}"
+  - "{{ audit_dest }}"
+
