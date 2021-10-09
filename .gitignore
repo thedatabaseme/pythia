@@ -1,0 +1,11 @@
+/roles/pythia/vars/vault.yml
+/roles/pythia/vars/client_dict.yml
+/roles/pythia/vars/patch_dict.yml
+/roles/pythia/vars/rdbms_dict.yml
+/roles/pythia/vars/rpm_dict.yml
+/roles/pythia/vars/sid_directories.yml
+/roles/pythia/templates/18EE_Database.rsp.j2
+/roles/pythia/templates/18SE2_Database.rsp.j2
+/roles/pythia/templates/19EE_Database.rsp.j2
+/roles/pythia/templates/19SE2_Database.rsp.j2
+.idea
