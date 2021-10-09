@@ -41,7 +41,7 @@ Installation and Configuration
   6. Define your Hosts or Hostgroups in the Ansible Host Inventory. (e.G. hosts)
   7. Place User-Defined SQL Scripts under the files/default directory of the Role. 
 
-**For first time Installation and further informations what to change and setup, please see the INSTALL.md for Details. This is important, else Pythia won't work correctly!**
+**For first time Installation and further informations what to change and setup, please see the [INSTALL.md](https://github.com/thedatabaseme/pythia/blob/master/INSTALL.md) for Details. This is important, else Pythia won't work correctly!**
 
 Example Playbook Runs
 ---------------------
