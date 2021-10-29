@@ -46,7 +46,7 @@ main.yml Variables (can be set when calling the playbook, see Examples):
   - remote_stage_directory (Default /oracle/sources): Software Stage Directory on the Target Server. E.G. Patches are staged here before applying it to a RDBMS or Database
   - local_sql_stage_directory (Default roles/pythia/files/default): Stage Directory for SQL Scripts on Ansible Control Server.
   - remote_sql_stage_directory (Default {{ remote_stage_directory }}/scripts): Stage Directory for SQL Scripts on Target Server.
-  - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy or change. The Version String has to be existant within the RDBMS Dictionary (rdbms_dictionary.yml under vars folder)
+  - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy or change. The Version String has to be existant within the RDBMS Dictionary (rdbms_dict.yml under vars folder)
   - client_version (Default 19CLNT): The Version of the Oracle Client you want to deploy. The Version String has to be existant within the Client Dictionary (client_dict.yml under vars folder)
   - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only needed when starting the playbook with the "db" tag, for creating a Database.
   - space_needed_gb: Space approximately in GB for installing the RDBMS. Respects, that there is probably a Patch installed on top. OVERLOADS rdbms_dict.yml space_needed_gb. SHOULD NOT BE SPECIFIED WITHIN HERE. SHOULD BE SPECIFIED AS EXTRA VARIABLE IN PLAYBOOK CALL.
