@@ -1,75 +1,78 @@
 Changelog of Pythia:
 
+Version 2.0.1
+  - Fixed Issue #9: Tempfiles will now be dropped / deleted, when Target DB already exists and you specify to override the Target DB
+
 Version 2.0.0
   - Pythia is now OpenSource. All former Changes are no longer part of this repository. Changelog history is only for a better overview still included
 
 Version 1.5.2
-  - Fixed (reopened) Issue #97: The psmisc Package is now also a required Package for SLES OS
-  - Fixed Issue #142: acl Package is now a prerequisite Package for all Linux OS
-  - Fixed Issue #141: Maximum Datafiles are now set to 500 in the DBCA Templates
-  - Fixed Issue #124: You can now specify an additional directory in rdbms_dict, that will be created / permission set when installing an RDBMS
-  - Fixed Issue #116: For SLES Systems and the NMDA Module RPM Installation, the Zypper Module will be used without making a gpg check
+  - Fixed (reopened) Issue #097: The psmisc Package is now also a required Package for SLES OS
+  - Fixed Issue #0142: acl Package is now a prerequisite Package for all Linux OS
+  - Fixed Issue #0141: Maximum Datafiles are now set to 500 in the DBCA Templates
+  - Fixed Issue #0124: You can now specify an additional directory in rdbms_dict, that will be created / permission set when installing an RDBMS
+  - Fixed Issue #0116: For SLES Systems and the NMDA Module RPM Installation, the Zypper Module will be used without making a gpg check
 
 Version 1.5.1
-  - Fixed Issue #138: Fixed Archivelog Backup Template during duplicate
+  - Fixed Issue #0138: Fixed Archivelog Backup Template during duplicate
 
 Version 1.5.0
-  - Fixed Issue #125: Backup of Archivelogs will now be altered before running a duplicate. So Archivelogs will be preserved during duplicate and be restored after a finished Duplicate
-  - Fixed Issue #132: Listener Names will now be checked before Duplicate.
-  - Fixed Issue #131: RMAN Duplicate will now run in "no_log" Mode. So no passwords will be visible
-  - Fixed Issue #133: Duplicate now runs inside a block and copies back the backed up rman_arc.par file always
-  - Fixed Issue #134: RMAN Duplicate will now run in async and poll mode (background) to prevent SSH Timeouts
-  - New Feature #123: You can now execute a SQL Script as a Duplicate Post-processing task by specifiying the duplicate_run_post_script Variable
-  - New Feature #135: A List of User Passwords can now be preserved during duplicate and will be set after duplication
+  - Fixed Issue #0125: Backup of Archivelogs will now be altered before running a duplicate. So Archivelogs will be preserved during duplicate and be restored after a finished Duplicate
+  - Fixed Issue #0132: Listener Names will now be checked before Duplicate.
+  - Fixed Issue #0131: RMAN Duplicate will now run in "no_log" Mode. So no passwords will be visible
+  - Fixed Issue #0133: Duplicate now runs inside a block and copies back the backed up rman_arc.par file always
+  - Fixed Issue #0134: RMAN Duplicate will now run in async and poll mode (background) to prevent SSH Timeouts
+  - New Feature #0123: You can now execute a SQL Script as a Duplicate Post-processing task by specifiying the duplicate_run_post_script Variable
+  - New Feature #0135: A List of User Passwords can now be preserved during duplicate and will be set after duplication
 
 Version 1.4.3
-  - Fixed Issue #129: Patch Archive and Gather Databases running are now running as oracle_user.
+  - Fixed Issue #0129: Patch Archive and Gather Databases running are now running as oracle_user.
 
 Version 1.4.2
   - New Feature: Duplicate will now handle more complex situations when the target database already exists
   - New Feature: Duplicate now uses "using backupset" for RMAN duplicate which will enable "Null Block Compression"
   - New Feature: Duplicate now supports preserving existing SPFILE / Database on Target System
-  - Fixed Issue #121: == true and == false usages have been replaced
-  - Fixed Issue #122: Names are now specified for all set_facts and debug tasks
-  - Fixed Issue #95: It is now checked if a Target Database already exists. If you don't specify the duplicate_remove_target=true Variable, Pythia will fail
+  - Fixed Issue #0121: == true and == false usages have been replaced
+  - Fixed Issue #0122: Names are now specified for all set_facts and debug tasks
+  - Fixed Issue #095: It is now checked if a Target Database already exists. If you don't specify the duplicate_remove_target=true Variable, Pythia will fail
 
 Version 1.4.1
-  - Fixed Issue #113: sqlscriptoutput TAG has been removed from README.md
+  - Fixed Issue #0113: sqlscriptoutput TAG has been removed from README.md
 
 Version 1.4
   - New Feature: Pythia can now Upgrade Oracle Databases using the Autoupgrade Mechanism
   - New Feature: Added Support for RHEL8, OEL8 and CentOS8 (beware, CentOS is not officially certified for Oracle Database)
-  - Changed #98: The Tag sqlscriptoutput has been removed. Use the Variable sqlscriptoutput True / False instead
-  - Fixed Issue #111: Wrong Package Name for SLES12 fixed
+  - Changed #098: The Tag sqlscriptoutput has been removed. Use the Variable sqlscriptoutput True / False instead
+  - Fixed Issue #0111: Wrong Package Name for SLES12 fixed
 
 Version 1.3.4
-  - Fixed Issue #99: UID and GID of Oracle OS User and DBA Group are now 1500 instead of 500
+  - Fixed Issue #099: UID and GID of Oracle OS User and DBA Group are now 1500 instead of 500
 
 Version 1.3.3
-  - Fixed Issue #93: When duplicating, the Target Listener will be configured and started if not already configured or started
+  - Fixed Issue #093: When duplicating, the Target Listener will be configured and started if not already configured or started
 
 Version 1.3.2
-  - Fixed Issue #87: .bash_profile is now created if not existant
-  - Fixed Issue #88: Grub Configuration is now divided into SLES and RHEL specific Task
+  - Fixed Issue #087: .bash_profile is now created if not existant
+  - Fixed Issue #088: Grub Configuration is now divided into SLES and RHEL specific Task
 
 Version 1.3.1
-  - Fixed Issue #82: Diagnostic Destination is now created before Database Creation
+  - Fixed Issue #082: Diagnostic Destination is now created before Database Creation
 
 Version 1.3
   - New Feature: Oracle Client Software can now be installed on Linux Systems with using the "client" tag
   - New Feature: Duplicate from Active Database is now possible with using the "duplicate" tag
-  - Fixed Issue #78: sysctl_stable is not respected correctly in prerequisite.yml
+  - Fixed Issue #078: sysctl_stable is not respected correctly in prerequisite.yml
 
 Version 1.2.3
-  - Fixed Issue #73: ora_set.sh now displays Oracle Version and Release correctly for Oracle 18 onwards
+  - Fixed Issue #073: ora_set.sh now displays Oracle Version and Release correctly for Oracle 18 onwards
 
 Version 1.2.2
-  - Fixed Issue #69: Listener and Tnsnames Configuration will now be appended when there is already an existing listener on the Oracle Home
+  - Fixed Issue #069: Listener and Tnsnames Configuration will now be appended when there is already an existing listener on the Oracle Home
   - New Feature: Listener Logging Configuration is now dynamic. You can now Specify Variable listener_logging to either ON of OFF (Default OFF)
 
 Version 1.2.1
-  - Fixed Issue #59: You can now specify autoextend=true/false (Default false) when calling a playbook. This controls if datafiles will be autoextensible or not
-  - Fixed Issue #57: Default sysctl.conf Settings will now be deleted
+  - Fixed Issue #059: You can now specify autoextend=true/false (Default false) when calling a playbook. This controls if datafiles will be autoextensible or not
+  - Fixed Issue #057: Default sysctl.conf Settings will now be deleted
   - New Feature: A converttohugepage Tag has been implemented to convert a non Hugepage configured System into a Hugepage configured System
   - New Feature: A prepare Tag has been implemented to prepare a target System for an Oracle Installation later on. (User / Group, Kernel Parameters, Hugepages, Shell Scripts)
 
@@ -77,10 +80,10 @@ Version 1.2
   - New Feature: SGA and PGA can now be dynamically set for DB Creation. sga_max_size and pga_aggregate_target can be set as extra Variable when calling the Playbook
   - New Feature: Hugepages can now be configured by Pythia using the hugepage tag.
   - New Feature: DBCA Logfile location is now shown before running DBCA
-  - Fixed Issue #54: Done a complete Code Review. Added dozens of Comments, Restructure Prerequisite and Precheck Tasks
+  - Fixed Issue #054: Done a complete Code Review. Added dozens of Comments, Restructure Prerequisite and Precheck Tasks
 
 Version 1.1.1
-  - Fixed Issue #44: DBCA does not honor the Controlfile Initialization Parameter unless you call dbca with -honorControlFileInitParam
+  - Fixed Issue #044: DBCA does not honor the Controlfile Initialization Parameter unless you call dbca with -honorControlFileInitParam
   
 Version 1.1
   - New Feature: SQL Scripts can be executed on a remote Oracle Database. Files to be executed can be located under local_sql_stage_directory path
@@ -92,17 +95,17 @@ Version 1.1
   - New Feature: You can setup Autostart for a Database you specify under the Linux System.
 
 Version 1.0.2
-  - Fixed Issue #5: The RDBMS Software and Patch Archives will now be copied to the Remote Staging Area before uncompressing. Thos solves, that user temp directories or /var/tmp will become full.
-  - Fixed Issue #12: Overloaded the Variable space_needed_gb from rdbms_dict.yml into main.yml. When calling the Playbook with the variable set, this value will be checked for free space available rather than the value in rdbms_dict.yml
-  - Fixed Issue #30: Remote Stage Directory will now be created also when only tagging Patch or Patchonly
-  - Fixed Issue #48: Wrong Package Names for SLES12 and SLES15 Systems
+  - Fixed Issue #05: The RDBMS Software and Patch Archives will now be copied to the Remote Staging Area before uncompressing. Thos solves, that user temp directories or /var/tmp will become full.
+  - Fixed Issue #012: Overloaded the Variable space_needed_gb from rdbms_dict.yml into main.yml. When calling the Playbook with the variable set, this value will be checked for free space available rather than the value in rdbms_dict.yml
+  - Fixed Issue #030: Remote Stage Directory will now be created also when only tagging Patch or Patchonly
+  - Fixed Issue #048: Wrong Package Names for SLES12 and SLES15 Systems
 
 Version 1.0.1
-  - Fixed Issue #3, #4: Tags in prereq_packages included. Include Filename Changed
-  - Fixed Issue #6: Check if Oracle OS User and Group exist
-  - Fixed Issue #9: Value of needed Free Space when installing a RDBMS is now configurable in the rdbms_dict.yml
-  - Fixed Issue #11: If the files 97* under sysctl.d and limits.d exist, they will now not be overwritten. Also Owner and Group are now setup for security.d template file
-  - Fixed Issue #10 #15: Split RDBMS Installation and Prechecks into separate Task Files to clean up the main.yml Files
+  - Fixed Issue #03, #04: Tags in prereq_packages included. Include Filename Changed
+  - Fixed Issue #06: Check if Oracle OS User and Group exist
+  - Fixed Issue #09: Value of needed Free Space when installing a RDBMS is now configurable in the rdbms_dict.yml
+  - Fixed Issue #011: If the files 97* under sysctl.d and limits.d exist, they will now not be overwritten. Also Owner and Group are now setup for security.d template file
+  - Fixed Issue #010 #015: Split RDBMS Installation and Prechecks into separate Task Files to clean up the main.yml Files
 
 Version 1.0
   - Initial Version
