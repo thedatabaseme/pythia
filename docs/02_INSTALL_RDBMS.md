@@ -38,3 +38,10 @@ Example: Install Oracle RDBMS with Version 18c as Standard Edition 2 on Host "an
 Example: Install Oracle RDBMS with Version 19c as Enterprise Edition on Host "ansibletest", install the 19.5 RU (Patch ID: 30125133). Build a Database named "ORA19" on top:
 
     - ansible-playbook /etc/ansible/pythia/pythia.yml -e "HOSTS=ansibletest" --tags "rdbms, db, patch" -e "oracle_sid=ORA19 oracle_version=19EE install_patch=30125133" -k -K -u <username>
+
+## Further Documentation
+
+This is only were the fun begins, next let's have a look on how to create a Database using Pythia and how to install Patches on top of your RDBMS and Database.
+
+  - [Create a Database](https://github.com/thedatabaseme/pythia/blob/master/docs/03_CREATE_DB.md)
+  - [Install Patches and Updates](https://github.com/thedatabaseme/pythia/blob/master/docs/04_INSTALL_PATCH.md)

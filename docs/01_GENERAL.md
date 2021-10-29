@@ -97,3 +97,5 @@ Pythia works in the following order. This is important to know, which steps will
 We try to provide a detailed documentation for each usecase of Pythia. Please have a look into these:
 
   - [Install an Oracle Database RDBMS](https://github.com/thedatabaseme/pythia/blob/master/docs/02_INSTALL_RDBMS.md)
+  - [Create a Database](https://github.com/thedatabaseme/pythia/blob/master/docs/03_CREATE_DB.md)
+  - [Install Patches and Updates](https://github.com/thedatabaseme/pythia/blob/master/docs/04_INSTALL_PATCH.md)
