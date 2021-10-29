@@ -1,5 +1,8 @@
 Changelog of Pythia:
 
+Version 2.1.0
+  - Fixed Issue #7: Updated README(s) and added Features to the list
+
 Version 2.0.0
   - Pythia is now OpenSource. All former Changes are no longer part of this repository. Changelog history is only for a better overview still included
 
