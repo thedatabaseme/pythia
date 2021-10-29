@@ -298,10 +298,10 @@
   tags:
     - duplicate
 
-- name: Shutdown running Target Database
+- name: Dropping Target Database {{ duplicate_target_sid }}
   become: yes
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"shutdown abort;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"shutdown abort; \\n startup mount exclusive restrict; \\n drop database;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -312,6 +312,21 @@
   when: (duplicate_remove_target) and ("OPEN" | string in item.stdout)
   tags:
     - duplicate
+
+#- name: Shutdown running Target Database
+#  become: yes
+#  become_user: "{{ oracle_user }}"
+#  shell: "echo -e \"shutdown abort;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+#  environment:
+#    ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
+#    ORACLE_SID: "{{ duplicate_target_sid }}"
+#  with_items:
+#    - "{{ target_db_status }}"
+#  delegate_to: "{{ duplicate_target_host }}"
+#  run_once: true
+#  when: (duplicate_remove_target) and ("OPEN" | string in item.stdout)
+#  tags:
+#    - duplicate
 
 ###################################################################################
 # Check the Listener and TNS Configuration on Source and Target Side
