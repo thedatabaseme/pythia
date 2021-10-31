@@ -55,10 +55,10 @@
 #  - duplicate_clone_spfile (Default spfile): Will be set to preservespfile when duplicate_preserve_parameter is set to target. Must not be modified
 #  - duplicate_rate_limit_per_channel (Default 40M): Controls the RMAN RATE Limit that comes to play in a duplicate job. Each Channel will not exceed this Rate in Byte while doings a duplicate.
 #  - duplicate_max_runtime (Default 54000): Number of Seconds of the maximum RMAN Duplicate runtime.
-#  - duplicate_run_post_script (Default false): Controls if some SQL Script should be run in Post-processing (so after the duplicate has finished). The SQL Script shoudl be placed under files/default/duplicate_<duplicate_source_sid>_post.sql
+#  - duplicate_run_post_script (Default false): Controls if some SQL Script should be run in Post-processing (so after the duplicate has finished). The SQL Script should be placed under files/default/duplicate_<duplicate_source_sid>_post.sql
 #  - oracle_source_version (Default 18EE): The version of the Database to upgrade. This is needed for checking the oracle home directory.
 #  - oracle_target_version: (Default 19EE): The version the Database will be upgraded to. This is needed for checking the oracle home directory.
-#  - upgrade_log_dir: ("/oracle/cfgtoollogs/autoupgrade/<date><time>): Creates a path for a upgrade log directory
+#  - upgrade_log_dir: (Default /oracle/cfgtoollogs/autoupgrade/<date><time>): Creates a path for a upgrade log directory
 #  - upgrade_mode (Default: analyze): Defines the mode the autoupgrade is running at. Options: analyze / fixup / deploy
 #  - autoupgrade_jar_dir (Default: /db/oracle/19/rdbms/linux/x86_64/upgrade): Path where the up to date autoupgrade.jar is located, relative to the local_stage_directory variable. Must reside under local_stage_directory
 #  - create_grp (Default: no): Controls if a Restore Point is made during an Autoupgrade Process
