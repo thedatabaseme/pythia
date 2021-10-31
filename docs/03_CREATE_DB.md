@@ -29,15 +29,15 @@ During the Prerequisite Check that Pythia does everytime you let her go, the acc
 |---------------|--------------------------|---------------|
 |sga_max_size |Size of the SGA in GB of the Oracle Database to be created. Both Parameters <br>sga_max_size and sga_target will be set to this value for your Instance Configuration|2|
 |pga_aggregate_target|Size of the PGA in GB of the Oracle Database to be created. Will be set as <br>Oracle Parameter pga_aggregate_target|1|
-|use_large_pages|Can be TRUE or ONLY. Will automatically be set to ONLY when the hugepage tag <br>is specified|TRUE|
-|management_pack_access|Controls the Parameter control_management_pack_access when creating a <br>new Database. Values can be in: "NONE", "DIAGNOSTIC" or "DIAGNOSTIC+TUNING". <br>Be sure, that you have licenced the corrent Enterprise Option (Tuning and or Diagnostic Pack) <br>before setting this Parameter other than NONE. In the Standard Edition 2 of Oracle, <br>it is not possible to licence this Features, so the Variable will not have <br>impact on this Response File Templates.|NONE|
+|use_large_pages|Can be `TRUE` or `ONLY`. Will automatically be set to `ONLY` when the hugepage tag <br>is specified|TRUE|
+|management_pack_access|Controls the Parameter control_management_pack_access when creating a <br>new Database. Values can be in: `NONE`, `DIAGNOSTIC` or `DIAGNOSTIC+TUNING`. <br>Be sure, that you have licenced the corrent Enterprise Option (Tuning and or Diagnostic Pack) <br>before setting this Parameter other than NONE. In the Standard Edition 2 of Oracle, <br>it is not possible to licence this Features, so the Variable will not have <br>impact on this Response File Templates.|NONE|
 |character_set|Character Set of the Database when creating.|AL32UTF8|
 |national_character_set|National Character Set of the Database when creating|AL16UTF16|
-|nls_length_semantics|Oracle Parameter NLS_LENGTH_SEMANTICS, can be BYTE or CHAR. When set, it will <br>be placed in the Database creation Response Files|BYTE|
+|nls_length_semantics|Oracle Parameter NLS_LENGTH_SEMANTICS, can be `BYTE` or `CHAR`. When set, it will <br>be placed in the Database creation Response Files|BYTE|
 |listener_port|Port on which a new listener will be created. Only needed when starting the playbook <br>with the "db" or "listener" tag.|1521|
 |listener_prefix|The Prefix with which a new listener will be created after the Database creation. <br>The SID of the Database will always be appended to the prefix. Only needed when <br>starting the playbook with the "db" or "listener" tag.|LSNR_|
-|listener_logging|Specifies if a created listener will be configured to log or not. Can be either OFF or ON.|OFF|
-|emexpress|Specifies if the EM Express should be installed / configured when creating a Database. <br>There are two valid values for this Variable: DBEXPRESS and NONE|DBEXPRESS|
+|listener_logging|Specifies if a created listener will be configured to log or not. Can be either `OFF` or `ON`.|OFF|
+|emexpress|Specifies if the EM Express should be installed / configured when creating a Database. <br>There are two valid values for this Variable: `DBEXPRESS` and `NONE`|DBEXPRESS|
 |autoextend|Specifies if the created Datafiles should be autoextensible or not|FALSE|
 
 ## Examples
