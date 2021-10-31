@@ -3,9 +3,13 @@ Pythia is a Role for ansible that helps you to automate the following tasks when
 
   - Install Oracle RDBMS (Starting with Version 18) on a target system
   - Create a Database on top of a new or an existing RDBMS
+  - Adjust all needed Kernel Parameters to run an Oracle Database
+  - Creates OS Users and Groups implicitly
   - Install Patches on top of a new and existing RDBMS and or Database
   - Runs SQL Scripts against a specified Oracle Database
   - Upgrade a Oracle DB to a new Version
+  - Duplicate a Database with RMAN "duplicate from active database"
+  - Install Oracle Client
   
 Thereby several Prerequisites are fullfilled and or checked. E.G.
 
