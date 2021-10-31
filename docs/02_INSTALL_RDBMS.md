@@ -12,6 +12,8 @@ During the Prerequisite Check that Pythia does everytime you let her go, the acc
 
 ## Variables
 
+### Mandatory Variables
+
 | Variable Name | Description              | Default Value |
 |---------------|--------------------------|---------------|
 |oracle_version |The Version of the RDBMS and Database you want to deploy or change.<br>The Version String has to be existant within the RDBMS Dictionary (rdbms_dict.yml under vars folder)|19EE|
