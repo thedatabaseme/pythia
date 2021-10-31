@@ -1,0 +1,12 @@
+run{
+allocate channel prmy1 type disk;
+allocate channel prmy2 type disk;
+allocate auxiliary channel aux1 device type disk rate {{ duplicate_rate_limit_per_channel }};
+duplicate target database for standby from active database using backupset
+spfile
+parameter_value_convert '{{ dataguard_source_sid }}', '{{ dataguard_target_sid }}'
+set db_file_name_convert='{{ dataguard_source_sid }}','{{ dataguard_target_sid }}'
+set log_file_name_convert='{{ dataguard_source_sid }}','{{ dataguard_target_sid }}'
+set log_archive_dest_1='LOCATION=/db_data/{{ duplicate_target_sid }}/archive'
+nofilenamecheck;
+}
