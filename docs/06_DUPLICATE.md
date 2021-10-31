@@ -1,12 +1,12 @@
 # Duplicate a Database with Pythia
 
-Pythia is able to duplicate an Oracle Database using RMAN "duplicate from active database". Pythia will also support you, to delete already existing Target Databases in this process. As well as to run User defined Scripts, preserve Passwords during the duplicate from the Target DB, disable Archivelog deletion from Source and to preserve a maybe existing Init-File (spfile) from Source or Target.
+Pythia is able to duplicate an Oracle Database using RMAN "duplicate from active database". Pythia will also support you, to delete already existing Target Databases in this process. As well as to run User defined Scripts, preserve Passwords during the duplicate from the Target DB, disable Archivelog deletion from Source and to preserve a maybe existing Init-File (spfile) from Source or Target. This can be done by specifying the `duplicate` TAG.
 
-Be aware, that using the "duplicate" TAG assumes, that there is a valid RDBMS in the correct Version already installed on both Systems. If this isn't the case, you need to specify the "rdbms" TAG like described [here](https://github.com/thedatabaseme/pythia/blob/master/docs/02_INSTALL_RDBMS.md)
+Be aware, that using the `duplicate` TAG assumes, that there is a valid RDBMS in the correct Version already installed on both Systems. If this isn't the case, you need to specify the `rdbms` TAG like described [here](https://github.com/thedatabaseme/pythia/blob/master/docs/02_INSTALL_RDBMS.md)
 
 ## Working with an Ansible Vault
 
-To process a duplicate database, Pythia will need the SYS Password from the Source Database. The password needs to be provided in a vault.yml file, that resides under the roles/pythia/vars directory.
+To process a duplicate database, Pythia will need the SYS Password from the Source Database. The password needs to be provided in a `vault.yml` file, that resides under the `roles/pythia/vars` directory.
 To create a new Vault File, you can do so by:
 
     ansible-vault create ./pythia/roles/pythia/vars/vault.yml
@@ -27,23 +27,23 @@ You can find more general informations about the usage of an Ansible Vault [here
 | Variable Name | Description              | Default Value |
 |---------------|--------------------------|---------------|
 |HOSTS |In this special usecase, you need to specify the Target Host as HOSTS.|none|
-|duplicate_source_host|The source host on which the duplicate_source_sid is running. <br>Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.|none|
-|duplicate_target_host|The target host on which the duplicate_target_sid is running. <br>Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.|none|
-|duplicate_source_sid|The source SID of the Database to duplicate. Only needed when starting <br>the playbook with the "duplicate" tag, for duplicating a Database.|none|
-|duplicate_target_sid|The target SID of the Database to duplicate to. Only needed when starting <br>the playbook with the "duplicate" tag, for duplicating a Database.|none|
+|duplicate_source_host|The source host on which the duplicate_source_sid is running. <br>Only needed when starting the playbook with the `duplicate` tag, for duplicating a Database.|none|
+|duplicate_target_host|The target host on which the duplicate_target_sid is running. <br>Only needed when starting the playbook with the `duplicate` tag, for duplicating a Database.|none|
+|duplicate_source_sid|The source SID of the Database to duplicate. Only needed when starting <br>the playbook with the `duplicate` tag, for duplicating a Database.|none|
+|duplicate_target_sid|The target SID of the Database to duplicate to. Only needed when starting <br>the playbook with the `duplicate` tag, for duplicating a Database.|none|
 
 ### Optional Variables
 
 
 | Variable Name | Description              | Default Value |
 |---------------|--------------------------|---------------|
-|duplicate_remove_target|Controls if you have acknowledged that the Target Database will be removed before starting the actual duplicate|FALSE|
-|duplicate_preserve_parameter|Controls which parameters are considered during Duplication. <br>Can be either `source` or `target`. So either the Source DBs Parameters will be preserved <br>or the Target DBs Parameters will be preserved|source|
-|duplicate_preserve_passwords|Controls if you want to preserve the Passwords of an already <br>existing Target Database and set them after Duplication|TRUE|
-|duplicate_preserve_pwd_user_list|A List of Users (comma separated and in Quotes) of which <br>the Passwords should be preserved|'SYS','SYSTEM','DBSNMP'|
-|duplicate_rate_limit_per_channel|Controls the RMAN RATE Limit that comes to play in a duplicate job. <br>Each Channel will not exceed this Rate in Byte while doings a duplicate.|40M|
-|duplicate_max_runtime|Number of Seconds of the maximum RMAN Duplicate runtime.|54000|
-|duplicate_run_post_script|Controls if some SQL Script should be run in Post-processing <br>(so after the duplicate has finished). The SQL Script should be placed under <br>files/default/duplicate_<duplicate_source_sid>_post.sql|FALSE|
+|duplicate_remove_target|Controls if you have acknowledged that the Target Database will be removed before starting the actual duplicate|`FALSE`|
+|duplicate_preserve_parameter|Controls which parameters are considered during Duplication. <br>Can be either `source` or `target`. So either the Source DBs Parameters will be preserved <br>or the Target DBs Parameters will be preserved|`source`|
+|duplicate_preserve_passwords|Controls if you want to preserve the Passwords of an already <br>existing Target Database and set them after Duplication|`TRUE`|
+|duplicate_preserve_pwd_user_list|A List of Users (comma separated and in Quotes) of which <br>the Passwords should be preserved|`'SYS','SYSTEM','DBSNMP'`|
+|duplicate_rate_limit_per_channel|Controls the RMAN RATE Limit that comes to play in a duplicate job. <br>Each Channel will not exceed this Rate in Byte while doings a duplicate.|`40M`|
+|duplicate_max_runtime|Number of Seconds of the maximum RMAN Duplicate runtime.|`54000`|
+|duplicate_run_post_script|Controls if some SQL Script should be run in Post-processing <br>(so after the duplicate has finished). The SQL Script should be placed under <br>files/default/duplicate_<duplicate_source_sid>_post.sql|`FALSE`|
 
 ## Examples
 

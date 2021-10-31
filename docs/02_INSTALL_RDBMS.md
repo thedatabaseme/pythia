@@ -1,13 +1,13 @@
 # Install RDBMS with Pythia
 
-The most basic Feature of Pythia is, to install an Oracle Database RDBMS on a Linux machine of your choice. If you haven't done so, please read the [General Instructions](https://github.com/thedatabaseme/pythia/blob/master/docs/01_GENERAL.md) before you continue reading this one. The RDBMS Installation will most likely be combined with other Tasks (TAGs) you want to have done by Pythia. We will give you some examples here, but you can find the details in the according documentation.
+The most basic Feature of Pythia is, to install an Oracle Database RDBMS on a Linux machine of your choice. If you haven't done so, please read the [General Instructions](https://github.com/thedatabaseme/pythia/blob/master/docs/01_GENERAL.md) before you continue reading this one. The RDBMS Installation will most likely be combined with other Tasks (TAGs) you want to have done by Pythia. We will give you some examples here, but you can find the details in the according documentation. This can be done by specifying the `rdbms` TAG.
 
 ## Prerequisites
 
 During the Prerequisite Check that Pythia does everytime you let her go, the according Prerequisites will be implemented. When specifying the "rdbms" TAG, the following will be done during the prerequisite phase.
 
   - Ensure that OS User and Group exist. If not, Pythia will create them with a random Password
-  - Ensure that all needed Directories are created to install the Software in (specified in the vars/rdbms_dict.yml)
+  - Ensure that all needed Directories are created to install the Software in (specified in the `vars/rdbms_dict.yml`)
   - Ensure that all needed OS Packages are installed. Be aware, you need access to a Repository here!
 
 ## Variables
@@ -16,13 +16,13 @@ During the Prerequisite Check that Pythia does everytime you let her go, the acc
 
 | Variable Name | Description              | Default Value |
 |---------------|--------------------------|---------------|
-|oracle_version |The Version of the RDBMS and Database you want to deploy or change.<br>The Version String has to be existant within the RDBMS Dictionary (rdbms_dict.yml under vars folder)|19EE|
+|oracle_version |The Version of the RDBMS and Database you want to deploy or change.<br>The Version String has to be existant within the RDBMS Dictionary (`rdbms_dict.yml` under vars folder)|`19EE`|
 
-Please also check the vars/rdbms_dict.yml and set the following Variables as you need. DON'T specify them in your Playbook Call.
+Please also check the `vars/rdbms_dict.yml` and set the following Variables as you need. DON'T specify them in your Playbook Call.
 
 | Variable Name | Description              |
 |---------------|--------------------------|
-|rdbms_dir |Path where the RDBMS is located on the Stage Directory,<br>relative to the local_stage_directory Variable|
+|rdbms_dir |Path where the RDBMS is located on the Stage Directory,<br>relative to the `local_stage_directory` Variable|
 |rdbms_file |Filename of the RDBMS Archive|
 |oracle_base|Oracle Base Directory for the specified RDBMS|
 |oracle_home|Oracle Home Directory for the specified RDBMS|

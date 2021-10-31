@@ -1,8 +1,8 @@
 # Upgrade a Database with Pythia
 
-You may want to Upgrade (e.G. 18c to 19c) an Oracle Database using Pythia. Pythia will thereby using the "autoupgrade" Feature of Oracle. 
+You may want to Upgrade (e.G. 18c to 19c) an Oracle Database using Pythia. Pythia will thereby using the "autoupgrade" Feature of Oracle. This can be done by specifying the `upgrade` TAG.
 
-Be aware, Pythia assumes, that both the source and the target RDBMS Version is already installed on the system when specifying the "upgrade" TAG. If this isn't the case, you need to specify the "rdbms" TAG like described [here](https://github.com/thedatabaseme/pythia/blob/master/docs/02_INSTALL_RDBMS.md)
+Be aware, Pythia assumes, that both the source and the target RDBMS Version is already installed on the system when specifying the `upgrade` TAG. If this isn't the case, you need to specify the "rdbms" TAG like described [here](https://github.com/thedatabaseme/pythia/blob/master/docs/02_INSTALL_RDBMS.md)
 
 ## Upgrade Modes
 
@@ -18,18 +18,18 @@ Pythia can use three so called "Upgrade Modes".
 
 | Variable Name | Description              | Default Value |
 |---------------|--------------------------|---------------|
-|oracle_source_version|The version of the Database to upgrade. This is needed for checking <br>the oracle home directory.|18EE|
-|oracle_target_version|The version the Database will be upgraded to. This is needed for <br>checking the oracle home directory.|19EE|
-|upgrade_mode|Defines the mode the autoupgrade is running at. Options: `analyze` / `fixup` / `deploy`|analyze|
+|oracle_source_version|The version of the Database to upgrade. This is needed for checking <br>the oracle home directory.|`18EE`|
+|oracle_target_version|The version the Database will be upgraded to. This is needed for <br>checking the oracle home directory.|`19EE`|
+|upgrade_mode|Defines the mode the autoupgrade is running at. Options: `analyze` / `fixup` / `deploy`|`analyze`|
 
 ### Optional Variables
 
 
 | Variable Name | Description              | Default Value |
 |---------------|--------------------------|---------------|
-|upgrade_log_dir|Creates a path for a upgrade log directory|/oracle/cfgtoollogs/autoupgrade/<date><time>|
+|upgrade_log_dir|Creates a path for a upgrade log directory|`/oracle/cfgtoollogs/autoupgrade/<date><time>`|
 |autoupgrade_jar_dir|Path where the up to date autoupgrade.jar is located, relative to the <br>`local_stage_directory` variable. Must reside under `local_stage_directory`|/db/oracle/19/rdbms/linux/x86_64/upgrade|
-|create_grp|Controls if a Restore Point is made during an Autoupgrade Process|no|
+|create_grp|Controls if a Restore Point is made during an Autoupgrade Process. Can be either `yes` or `no`|`no`|
 
 ## Examples
 
