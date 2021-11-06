@@ -1,7 +1,7 @@
 ---
 ##################################################################################
 # Main Task File for Pythia
-# Version 2.0.0
+# Version 2.1.0
 # Author: Philip Haberkern
 # For more Details view README.md
 ##################################################################################
@@ -44,6 +44,7 @@
     file: vars/vault.yml
   tags:
     - duplicate
+    - datapump
 
 ##################################################################################
 #       ////////////////////////// Set Facts //////////////////////////
@@ -147,6 +148,11 @@
   include_tasks: duplicate.yml
   tags:
     - duplicate
+
+- name: Datapump Export / Import
+  include_tasks: datapump.yml
+  tags:
+    - datapump
 
 ##################################################################################
 #  ////////////////////////// Finished Installation //////////////////////////
