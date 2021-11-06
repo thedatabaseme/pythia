@@ -1,0 +1,8 @@
+PYTHIA_DP_{{ datapump_source_sid }} =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = {{ datapump_source_host }})(PORT = {{ listener_port }}))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = {{ datapump_source_sid }})
+    )
+  )

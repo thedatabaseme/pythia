@@ -5,8 +5,13 @@ Pythia is a Role for ansible that helps you to automate the following tasks when
 
 - Install Oracle RDBMS on a target system
 - Create a Database on top of a new or an existing RDBMS
+- Adjust all needed Kernel Parameters to run an Oracle Database
+- Creates OS Users and Groups implicitly
 - Install Patches on top of a new and existing RDBMS and or Database
 - Upgrade a Oracle DB to a new Version
+- Duplicate a Database with RMAN "duplicate from active database"
+- Datapump Export / Import over NETWORK_LINK
+- Install Oracle Client
 
 Thereby several Prerequisites are fullfilled and or checked. E.G.
 
@@ -41,7 +46,7 @@ main.yml Variables (can be set when calling the playbook, see Examples):
   - remote_stage_directory (Default /oracle/sources): Software Stage Directory on the Target Server. E.G. Patches are staged here before applying it to a RDBMS or Database
   - local_sql_stage_directory (Default roles/pythia/files/default): Stage Directory for SQL Scripts on Ansible Control Server.
   - remote_sql_stage_directory (Default {{ remote_stage_directory }}/scripts): Stage Directory for SQL Scripts on Target Server.
-  - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy or change. The Version String has to be existant within the RDBMS Dictionary (rdbms_dictionary.yml under vars folder)
+  - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy or change. The Version String has to be existant within the RDBMS Dictionary (rdbms_dict.yml under vars folder)
   - client_version (Default 19CLNT): The Version of the Oracle Client you want to deploy. The Version String has to be existant within the Client Dictionary (client_dict.yml under vars folder)
   - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only needed when starting the playbook with the "db" tag, for creating a Database.
   - space_needed_gb: Space approximately in GB for installing the RDBMS. Respects, that there is probably a Patch installed on top. OVERLOADS rdbms_dict.yml space_needed_gb. SHOULD NOT BE SPECIFIED WITHIN HERE. SHOULD BE SPECIFIED AS EXTRA VARIABLE IN PLAYBOOK CALL.
@@ -67,6 +72,17 @@ main.yml Variables (can be set when calling the playbook, see Examples):
   - current_hugepages (Default 0): Just for initializing the Variable. Must not be modified
   - hugepages (Default 0): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
   - client_install_type (Default Administrator): Choose Which Client Install Type you want to install. Can be Administrator, Runtime, InstantClient or Custom
+  - datapump_source_host (Default NULL): The source host on which the datapump_source_sid is running. Only needed when starting the playbook with the "datapump" tag, for doing an Datapump Export / Import a Database.
+  - datapump_target_host (Default NULL): The target host on which the datapump_target_sid is running. Only needed when starting the playbook with the "datapump" tag, for doing an Datapump Export / Import a Database.
+  - datapump_source_sid (Default NULL): The source SID of the Database to Export. Only needed when starting the playbook with the "datapump" tag, for doing an Datapump Export / Import a Database.
+  - datapump_target_sid (Default NULL): The target SID of the Database to Import to. Only needed when starting the playbook with the "datapump" tag, for doing an Datapump Export / Import a Database.
+  - datapump_full (Default TRUE): Should a Full Export / Import be made or schema Import only? If FALSE, you need to specify the datapump_schema_list Variable
+  - datapump_schema_list (Default NULL): List of Schemas (divided by , for example USER1,USER2). Only relevant when datapump_full is FALSE. You need to to set datapump_full to FALSE when you want to export only a certain list of Schemas.
+  - datapump_schema_remap (Default NULL): List of Schemas to Remap. For Example "USER1:USERA,USER2:USERB" will remap USER1 to USERA and USER2 to USERB
+  - datapump_max_runtime (Default 14400): Number of Seconds of the maximum Datapump runtime.
+  - datapump_source_user (Default system): User on Source Database which the Database Link uses to connect over Network_link
+  - datapump_target_user (Default system): User on Target Database which impdp uses to  connect
+  - datapump_table_exists_action (Default SKIP): Controls the impdp TABLE_EXIST_ACTION. Can either be APPEND, REPLACE, [SKIP] or TRUNCATE
   - duplicate_source_host (Default NULL): The source host on which the duplicate_source_sid is running. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
   - duplicate_target_host (Default NULL): The target host on which the duplicate_target_sid is running. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
   - duplicate_source_sid (Default NULL): The source SID of the Database to duplicate. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
@@ -112,21 +128,22 @@ Dependencies
 ------------
 
 Tags that can be specified:
-  - rdbms: Specifies, that you want a RDBMS installed. When tagging rdbms, you also may want to specify the Variable oracle_version when starting the playbook with "rdbms" tag.
-  - db: Specifies, that you want to install a Database on top a new RDBMS (when specifying "rdbms" as a tag alongside with the "db" tag) or an already installed RDBMS on the target system. You may also want to specify the Variable oracle_version when starting the playbook with the "db" tag. You need to specify the oracle_sid Variable when calling the playbook for naming the new Database.
-  - patch: Specifies, that you want to install a Patch on top of a new RDBMS (when specifying "rdbms" as a tag alongside with the "patch" tag) or an already installed RDBMS. When specifying the "patch" tag, you need to also specify the "install_patch" Variable when running the playbook. While running under the "patch" tag, the Patch Archive will be uncompressed to the target system. The Patch Files will be deleted after successfully installing the Patch.
-  - patchonly: Like "patch" tag but implies, that the Patch Archive already exists on the target system. No cleanup will be done after the Patch Installation.
+  - rdbms: Specifies, that you want a RDBMS installed. When tagging `rdbms`, you also may want to specify the Variable `oracle_version` when starting the playbook with `rdbms` tag.
+  - db: Specifies, that you want to install a Database on top a new RDBMS (when specifying `rdbms` as a TAG alongside with the `db` TAG) or an already installed RDBMS on the target system. You may also want to specify the Variable `oracle_version` when starting the playbook with the `db` TAG. You need to specify the `oracle_sid` Variable when calling the playbook for naming the new Database.
+  - patch: Specifies, that you want to install a Patch on top of a new RDBMS (when specifying `rdbms` as a TAG alongside with the `patch` TAG) or an already installed RDBMS. When specifying the `patch` TAG, you need to also specify the `install_patch` Variable when running the playbook. While running under the `patch` TAG, the Patch Archive will be uncompressed to the target system. The Patch Files will be deleted after successfully installing the Patch.
+  - patchonly: Like `patch` tag but implies, that the Patch Archive already exists on the target system. No cleanup will be done after the Patch Installation.
   - cleanup: Forces a cleanup after sucessfull Patch Installation. Also forces that the created backup Files under the RDBMS that are created by OPatch when patching are deleted. Handle with caution if you may want to rollback the Patch.
-  - listener: Only creates a listener for the Specified Database with the oracle_sid Variable.
-  - sqlscript: Triggers, that SQL Scripts (.sql) under files/default (or specified by local_sql_stage_directory) directory will be executed against the specified oracle_sid. Be aware, the Scripts will be executed without any precheck. Bad SQL can cause immense harm.
-  - rpm: Triggers that additional RPMs have to be installed. When specifying "rpm" tag, you need also to specify the "install_rpm" Variable when running the playbook. The RPM will be transfered to the target system. After installing the RPM, the file will be removed.
-  - autostart: Controls that the automatic startup of the Database you specified will be implemented. When specifying the autostart tag, you also must specify the oracle_sid Variable when calling the Playbook.
-  - hugepage: Triggers, that Hugepages have to be configured. Can only be triggered when also tagging db. Hugepages will be calculated by given sga_max_size (Default 2G)
-  - converttohugepage: Converts a non Hugepage configured System to use Hugepages. Disables transparent_hugepages. Needs sga_max_size Variable set to the absolute Size (in GB) of all SGA's on the System
-  - prepare: Prepares the Target System for an upcomming Oracle Installation. Can be combined with the hugepage Tag and needs sga_max_size (Default 2G) specified to calculate Shared Memory and Hugepages
-  - client: Specifies, that you want to install an Oracle Client. When tagging client, you also may to want to specify the Variable client_version when starting the playbook with "client" tag.
-  - duplicate: Specifies, that you want to duplicate a Source Database to a Target Database. Uses RMAN duplicate from active Database. You need to specify the duplicate_source_host, duplicate_target_host, duplicate_source_sid and duplicate_target_sid Variable. As HOSTS you need to specify the Target Host.
-  - upgrade: Specifies that you want to upgrade a Database to a new Version. You need to specify the Variables oracle_source_version, oracle_target_version, oracle_sid and upgrade_mode when starting the Playbook with the "upgrade" tag.
+  - listener: Only creates a listener for the Specified Database with the `oracle_sid` Variable.
+  - sqlscript: Triggers, that SQL Scripts (.sql) under files/default (or specified by `local_sql_stage_directory`) directory will be executed against the specified `oracle_sid`. Be aware, the Scripts will be executed without any precheck. Bad SQL can cause immense harm.
+  - rpm: Triggers that additional RPMs have to be installed. When specifying `rpm` TAG, you need also to specify the `install_rpm` Variable when running the playbook. The RPM will be transfered to the target system. After installing the RPM, the file will be removed.
+  - autostart: Controls that the automatic startup of the Database you specified will be implemented. When specifying the `autostart` TAG, you also must specify the `oracle_sid` Variable when calling the Playbook.
+  - hugepage: Triggers, that Hugepages have to be configured. Can only be triggered when also tagging `db`. Hugepages will be calculated by given `sga_max_size` (Default 2G)
+  - converttohugepage: Converts a non Hugepage configured System to use Hugepages. Disables `transparent_hugepages`. Needs `sga_max_size` Variable set to the absolute Size (in GB) of all SGA's on the System
+  - prepare: Prepares the Target System for an upcomming Oracle Installation. Can be combined with the `hugepage` TAG and needs `sga_max_size` (Default 2G) specified to calculate Shared Memory and Hugepages
+  - client: Specifies, that you want to install an Oracle Client. When tagging `client`, you also may to want to specify the Variable `client_version` when starting the playbook with `client` TAG.
+  - duplicate: Specifies, that you want to duplicate a Source Database to a Target Database. Uses RMAN duplicate from active Database. You need to specify the `duplicate_source_host`, `duplicate_target_host`, `duplicate_source_sid` and `duplicate_target_sid` Variable. As HOSTS you need to specify the Target Host.
+  - upgrade: Specifies that you want to upgrade a Database to a new Version. You need to specify the Variables `oracle_source_version`, `oracle_target_version`, `oracle_sid` and `upgrade_mode` when starting the Playbook with the `upgrade` TAG.
+  - datapump: Specifies, that you want to do an Datapump Export / Import over NETWORK_LINK. You need to specify the `datapump_source_host`, `datapump_target_host`, `datapump_source_sid` and `datapump_target_sid` Variable. As HOSTS you need to specify the Target Host.
 
 
 Example Playbook

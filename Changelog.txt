@@ -1,5 +1,11 @@
 Changelog of Pythia:
 
+Version 2.1.0
+  - New Feature #1: Added documentation / instructions under docs/*.md for the most common tasks you can do with Pythia
+  - New Feature #13: Implemented Export / Import mechanism over Datapump Network_link
+  - Fixed Issue #7: Updated README(s) and added Features to the list
+  - Fixed Issue #11: All not needed Variables are moved from vars/main.yml to defaults/main.yml. Making them better overwriteable
+
 Version 2.0.1
   - Fixed Issue #9: Tempfiles will now be dropped / deleted, when Target DB already exists and you specify to override the Target DB
 

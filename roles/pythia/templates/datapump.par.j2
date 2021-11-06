@@ -1,0 +1,12 @@
+NETWORK_LINK=PYTHIA_DP_{{ datapump_source_sid }}
+DIRECTORY=PYTHIA_DP_DIR
+LOGFILE=pythia_dp_imp.log
+{% if datapump_full|bool %}
+FULL=TRUE
+{% else %}
+SCHEMAS={{ datapump_schema_list }}
+{% endif %}
+TABLE_EXISTS_ACTION={{ datapump_table_exists_action }}
+{% if not datapump_full|bool and datapump_schema_remap|length > 0 %}
+REMAP_SCHEMA={{ datapump_schema_remap }}
+{% endif %}

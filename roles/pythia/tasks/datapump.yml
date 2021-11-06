@@ -1,0 +1,135 @@
+---
+
+###################################################################################
+# Check if Target Environment is up and running
+# Tag: datapump
+###################################################################################
+
+- name: Gather Oracle Home used by Target SID {{ datapump_target_sid }}
+  become: yes
+  shell: "cat /etc/oratab | grep {{ datapump_target_sid }} | awk -F \":\" {'print$2'}"
+  args:
+    removes: /etc/oratab
+  register: datapump_target_home
+  delegate_to: "{{ datapump_target_host }}"
+  run_once: true
+  tags:
+    - datapump
+
+- name: Check if Target Database is Open
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "echo -e \"select status from v\\$instance;\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"
+  environment:
+    ORACLE_HOME: "{{ datapump_target_home.stdout }}"
+    ORACLE_SID: "{{ datapump_target_sid }}"
+  register: target_db_status
+  delegate_to: "{{ datapump_target_host }}"
+  run_once: true
+  tags:
+    - datapump
+
+- name: Oracle SID for Import is NOT in OPEN State
+  assert:
+    that: '"OPEN" | string in item.stdout'
+    fail_msg: The Target Database {{ datapump_target_sid }} is not in OPEN State.
+    success_msg: Oracle SID {{ datapump_target_sid }} is in OPEN State. Proceed with Datapump.
+  become: yes
+  become_user: "{{ oracle_user }}"
+  with_items:
+    - "{{ target_db_status }}"
+  delegate_to: "{{ datapump_target_host }}"
+  run_once: true
+  tags:
+    - datapump
+
+###################################################################################
+# Create TNSNames Entry, Database Link to Source and Directory Object for Logging
+# Tag: datapump
+###################################################################################
+
+- name: Create tnsnames.ora entry for Source Database {{ datapump_source_sid }} on Target Host {{ datapump_target_host }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  blockinfile:
+    dest: "{{ datapump_target_home.stdout }}/network/admin/tnsnames.ora"
+    block: "{{ lookup('template', 'roles/pythia/templates/tnsnames_datapump.ora') }}"
+    backup: yes
+    create: yes
+    marker: "## {mark} Datapump Source Database"
+  delegate_to: "{{ datapump_target_host }}"
+  run_once: true
+  tags:
+    - datapump
+
+- name: Drop maybe existing Database Link to Source Database {{ datapump_source_sid }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "echo -e \"set heading off; \\n drop public database link pythia_dp_{{ datapump_source_sid }};\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"
+  register: result
+  failed_when: ("FATAL" in result.stdout)
+  environment:
+    ORACLE_HOME: "{{ datapump_target_home.stdout }}"
+    ORACLE_SID: "{{ datapump_target_sid }}"
+  delegate_to: "{{ datapump_target_host }}"
+  run_once: true
+  tags:
+    - datapump
+
+- name: Create Database Link to Source Database {{ datapump_source_sid }}
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "echo -e \"set heading off; \\n create public database link pythia_dp_{{ datapump_source_sid }} connect to {{ datapump_source_user }} identified by \"{{ lookup('vars', 'vault_datapump_' + datapump_source_sid) }}\" using 'PYTHIA_DP_{{ datapump_source_sid }}';\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"
+  environment:
+    ORACLE_HOME: "{{ datapump_target_home.stdout }}"
+    ORACLE_SID: "{{ datapump_target_sid }}"
+  delegate_to: "{{ datapump_target_host }}"
+  run_once: true
+  tags:
+    - datapump
+
+- name: Create Directory Object for Logfiles
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "echo -e \"set heading off; \\n create or replace directory PYTHIA_DP_DIR as '{{ remote_stage_directory }}';\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"
+  environment:
+    ORACLE_HOME: "{{ datapump_target_home.stdout }}"
+    ORACLE_SID: "{{ datapump_target_sid }}"
+  delegate_to: "{{ datapump_target_host }}"
+  run_once: true
+  tags:
+    - datapump
+
+###################################################################################
+# Provide the Datapump Parfile and start the Datapump Export / Import
+# Tag: datapump
+###################################################################################
+
+- name: Create Datapump Parfile for Export / Import
+  become: yes
+  become_user: "{{ oracle_user }}"
+  template:
+    src: "roles/pythia/templates/datapump.par.j2"
+    dest: "{{ remote_stage_directory }}/datapump.par"
+    mode: 0755
+  delegate_to: "{{ datapump_target_host }}"
+  run_once: true
+  tags:
+    - datapump
+
+- name: Run impdp and start Export / Import
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ datapump_target_home.stdout }}/bin/impdp {{ datapump_target_user }}/'{{ lookup('vars', 'vault_datapump_' + datapump_source_sid) }}'@{{ datapump_target_sid }} parfile={{ remote_stage_directory }}/datapump.par"
+  environment:
+    ORACLE_HOME: "{{ datapump_target_home.stdout }}"
+    ORACLE_SID: "{{ datapump_target_sid }}"
+  delegate_to: "{{ datapump_target_host }}"
+  run_once: true
+  async: "{{ datapump_max_runtime }}"
+  poll: 30
+  register: result
+  failed_when: ("FATAL" in result.stdout)
+#  no_log: true
+  tags:
+    - datapump
