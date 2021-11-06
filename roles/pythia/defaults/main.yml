@@ -23,6 +23,17 @@
 #  - autoextend (Default false): Specifies if the created Datafiles should be autoextensible or not
 #  - listener_logging (Default OFF): Specifies if a created listener will be configured to log or not. Can be either OFF or ON.
 #  - client_install_type (Default Administrator): Choose Which Client Install Type you want to install. Can be Administrator, Runtime, InstantClient or Custom
+#  - datapump_source_host (Default NULL): The source host on which the datapump_source_sid is running. Only needed when starting the playbook with the "datapump" TAG, for doing an Datapump Export / Import a Database.
+#  - datapump_target_host (Default NULL): The target host on which the datapump_target_sid is running. Only needed when starting the playbook with the "datapump" TAG, for doing an Datapump Export / Import a Database.
+#  - datapump_source_sid (Default NULL): The source SID of the Database to Export. Only needed when starting the playbook with the "datapump" tag, for doing an Datapump Export / Import a Database.
+#  - datapump_target_sid (Default NULL): The target SID of the Database to Import to. Only needed when starting the playbook with the "datapump" tag, for doing an Datapump Export / Import a Database.
+#  - datapump_full (Default TRUE): Should a Full Export / Import be made or schema Import only? If FALSE, you need to specify the datapump_schema_list Variable
+#  - datapump_schema_list (Default NULL): List of Schemas (divided by , for example USER1,USER2). Only relevant when datapump_full is FALSE. You need to to set datapump_full to FALSE when you want to export only a certain list of Schemas.
+#  - datapump_schema_remap (Default NULL): List of Schemas to Remap. For Example "USER1:USERA,USER2:USERB" will remap USER1 to USERA and USER2 to USERB
+#  - datapump_max_runtime (Default 14400): Number of Seconds of the maximum Datapump runtime.
+#  - datapump_source_user (Default system): User on Source Database which the Database Link uses to connect over Network_link
+#  - datapump_target_user (Default system): User on Target Database which impdp uses to connect
+#  - datapump_table_exists_action (Default SKIP): Controls the impdp TABLE_EXIST_ACTION. Can either be APPEND, REPLACE, [SKIP] or TRUNCATE
 #  - duplicate_source_host (Default NULL): The source host on which the duplicate_source_sid is running. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
 #  - duplicate_target_host (Default NULL): The target host on which the duplicate_target_sid is running. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
 #  - duplicate_source_sid (Default NULL): The source SID of the Database to duplicate. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
@@ -81,6 +92,19 @@ upgrade_log_dir: "/oracle/cfgtoollogs/autoupgrade/{{ ansible_date_time.date }}_{
 upgrade_mode: analyze
 autoupgrade_jar_dir: /db/oracle/19/rdbms/linux/x86_64/upgrade
 create_grp: no
+
+# Control Variables for Datapump
+datapump_source_host: ""
+datapump_target_host: ""
+datapump_source_sid: ""
+datapump_target_sid: ""
+datapump_full: true
+datapump_schema_list: ""
+datapump_schema_remap: ""
+datapump_max_runtime: 14400
+datapump_source_user: "system"
+datapump_target_user: "system"
+datapump_table_exists_action: "SKIP"
 
 # Control Variables for Duplicate
 duplicate_source_host: ""

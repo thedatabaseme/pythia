@@ -9,6 +9,7 @@ Pythia is a Role for ansible that helps you to automate the following tasks when
   - Runs SQL Scripts against a specified Oracle Database
   - Upgrade a Oracle DB to a new Version
   - Duplicate a Database with RMAN "duplicate from active database"
+  - Datapump Export / Import over NETWORK_LINK
   - Install Oracle Client
   
 Thereby several Prerequisites are fullfilled and or checked. E.G.
@@ -68,6 +69,7 @@ Pythia works with tags to combine the actions of installation, configuration, pa
   - client: Specifies, that you want to install an Oracle Client. When tagging `client`, you also may to want to specify the Variable `client_version` when starting the playbook with `client` TAG.
   - duplicate: Specifies, that you want to duplicate a Source Database to a Target Database. Uses RMAN duplicate from active Database. You need to specify the `duplicate_source_host`, `duplicate_target_host`, `duplicate_source_sid` and `duplicate_target_sid` Variable. As HOSTS you need to specify the Target Host.  
   - upgrade: Specifies that you want to upgrade a Database to a new Version. You need to specify the Variables `oracle_source_version`, `oracle_target_version`, `oracle_sid` and `upgrade_mode` when starting the Playbook with the `upgrade` TAG.
+  - datapump: Specifies, that you want to do an Datapump Export / Import over NETWORK_LINK. You need to specify the `datapump_source_host`, `datapump_target_host`, `datapump_source_sid` and `datapump_target_sid` Variable. As HOSTS you need to specify the Target Host.
 
 Example: Install Oracle RDBMS with Version 19c and Enterprise Edition on Host "ansibletest", install the 19.5 RU (Patch ID: 30125133). Build a Database named "ORA19" on top:
 
@@ -111,3 +113,10 @@ Also you're able to specify, that the SPFILE of your maybe existing Target Datab
 Example: Upgrade an Oracle Database in Version 18 to Oracle Database in Version 19 on Host "ansibletest":
 
     - ansible-playbook /etc/ansible/pythia/pythia.yml -e "oracle_source_version=18EE oracle_target_version=19EE oracle_sid=ORAUPGRD upgrade_mode=deploy HOSTS=ansibletest" --tags "upgrade" -k -K -u <username>
+
+Example: Do a Datapump Export / Import over NETWORK_LINK. Source Database named EXPSRC to a Database named EXPDST on the host "vmdbsoradatapumptarget". As HOST, the Target Host must be specified:
+Attention!: The Passwords for the Source and Target Database is needed for the datapump process. The Password has to be provided within the vault.yml (using ansible-vault) as vault_datapump_<SOURCESID> and vault_datapump_<TARGETSID>
+
+    - ansible-playbook /etc/ansible/pythia/pythia.yml -e "HOSTS=vmdbsoradatapumptarget datapump_source_host=vmdbsdatapumpsource datapump_target_host=vmdbsoradatapumptarget datapump_source_sid=EXPSRC datapump_target_sid=EXPDST datapump_full=False datapump_schema_list='USER1,USER2'" --tags "datapump" -k -K -u <username> --vault-password-file /etc/ansible/vault_password.pwd
+
+    - ansible-playbook /etc/ansible/pythia/pythia.yml -e "HOSTS=vmdbsoradatapumptarget datapump_source_host=vmdbsdatapumpsource datapump_target_host=vmdbsoradatapumptarget datapump_source_sid=EXPSRC datapump_target_sid=EXPDST" --tags "datapump" -k -K -u <username> --vault-password-file /etc/ansible/vault_password.pwd

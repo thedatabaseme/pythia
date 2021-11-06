@@ -44,6 +44,7 @@
     file: vars/vault.yml
   tags:
     - duplicate
+    - datapump
 
 ##################################################################################
 #       ////////////////////////// Set Facts //////////////////////////
@@ -147,6 +148,11 @@
   include_tasks: duplicate.yml
   tags:
     - duplicate
+
+- name: Datapump Export / Import
+  include_tasks: datapump.yml
+  tags:
+    - datapump
 
 ##################################################################################
 #  ////////////////////////// Finished Installation //////////////////////////
