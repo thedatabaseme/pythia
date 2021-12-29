@@ -37,10 +37,10 @@ Pythia requires you to run Ansible 2.7 or higher. The Oracle Software you want t
 Installation and Configuration
 ------------------------------
 
-  1. Clone the Repository to your Ansible Controlserver: git clone https://github.com/theoracleme/pythia.git
+  1. Clone the Repository to your Ansible Controlserver: `git clone https://github.com/theoracleme/pythia.git`
   2. Setup a Fileshare, that includes the Oracle Software you want to install and mount it to the Ansible Controlserver.
   3. Configure the Fileshare as "Staging Area" by changing the "local_stage_directory" variable in the `vars/main.yml`
-  4. Configure all Variables fitting your environment. A description for all Variables can be found in the Roles README.md or the `vars/main.yml` File.
+  4. Configure all Variables fitting your environment. A description for all Variables can be found in the Roles [README.md](https://github.com/thedatabaseme/pythia/blob/master/roles/pythia/README.md) or the `vars/main.yml` File.
   5. Configure the `vars/rdbms_dict.yml`, `vars/patch_dict.yml` and `vars/sid_directories.yml` to suite your needs. A description for all Variables can be found in the Dictionary File or the README.md.
      Further Informations about what to change, can also be found in the [INSTALL.md](https://github.com/thedatabaseme/pythia/blob/master/INSTALL.md)
   6. Define your Hosts or Hostgroups in the Ansible Host Inventory. (e.G. hosts)
