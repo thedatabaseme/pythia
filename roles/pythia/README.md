@@ -107,6 +107,7 @@ patch_dict.yml (a Dictionary File for Patches that can be installed by Pythia):
   - patch_id: Unique Patch ID of the Patch
   - patch_dir: Path where the Patch is located on the Stage Directory, relative to the local_stage_directory Variable
   - patch_file: Filename of the Patch Archive
+  - patch_all_pdbs: Can be true or false. When defined and the according RDBMS is enabled as container_database (see rdbms_dict.yml), all PDBs will get opened and patched during patching.
   - opatch_dir: Path where the needed OPatch Version is located on the Stage Directory, relative to the local_stage_directory Variable
   - opatch_file: Filename of the OPatch Archive
   - desc: Description of the Patch
