@@ -88,6 +88,20 @@
   tags:
     - db
 
+- name: Create plugable Database {{ oracle_pdb_name }} with dbca
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/dbca -silent -createPluggableDatabase -pdbName {{ oracle_pdb_name }} -sourceDB {{ oracle_sid }} -configureTDE false -createPDBFrom DEFAULT -pdbAdminUserName pdmadm_{{ oracle_pdb_name }} -pdbAdminPassword {{ sys_user_password }} -pdbDatafileDestination {{ data_dest }}/{{ oracle_pdb_name }}"
+  register: result
+  failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
+  when: (rdbms[oracle_version|string].container_database|bool) and (oracle_pdb_name|length > 0)
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
+    ORACLE_BASE: "{{ rdbms[oracle_version|string].oracle_base }}"
+    ORACLE_SID: "{{ oracle_sid }}"
+  tags:
+    - db
+
 ###################################################################################
 # Reset Database Users Passwords and Print them out to the User
 # Tag: db
