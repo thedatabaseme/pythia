@@ -27,7 +27,7 @@
          <initParam name="sga_max_size" value="{{ sga_max_size }}" unit="GB"/>
          <initParam name="processes" value="300"/>
          <initParam name="recyclebin" value="off"/>
-         <initParam name="undo_tablespace" value="UNDO"/>
+         <initParam name="undo_tablespace" value="UNDOTBS1"/>
          <initParam name="control_files" value="(&quot;{{ admin_dest }}/control01{{ oracle_sid }}.ctl&quot;, &quot;{{ redo_dest1 }}/control02{{ oracle_sid }}.ctl&quot;)"/>
          <initParam name="control_management_pack_access" value="{{ management_pack_access }}"/>
          <initParam name="diagnostic_dest" value="{{ diag_dest }}"/>
@@ -62,7 +62,7 @@
          <SourceDBName cdb="true" db_id="112743258">seeddata</SourceDBName>
          <Name id="3" Tablespace="SYSAUX" Contents="PERMANENT" Size="2048" autoextend="true" blocksize="8192" con_id="1" datafileEncrypted="false">{{ data_dest }}/sysaux01{{ oracle_sid }}.dbf</Name>
          <Name id="1" Tablespace="SYSTEM" Contents="PERMANENT" Size="2048" autoextend="true" blocksize="8192" con_id="1" datafileEncrypted="false">{{ data_dest }}/system01{{ oracle_sid }}.dbf</Name>
-         <Name id="4" Tablespace="UNDO" Contents="UNDO" Size="1024" autoextend="true" blocksize="8192" con_id="1" datafileEncrypted="false">{{ data_dest }}/undo01{{ oracle_sid }}.dbf</Name>
+         <Name id="4" Tablespace="UNDOTBS1" Contents="UNDO" Size="1024" autoextend="true" blocksize="8192" con_id="1" datafileEncrypted="false">{{ data_dest }}/undotbs101{{ oracle_sid }}.dbf</Name>
          <Name id="7" Tablespace="USERS" Contents="PERMANENT" Size="50" autoextend="true" blocksize="8192" con_id="1" datafileEncrypted="false">{{ data_dest }}/users01{{ oracle_sid }}.dbf</Name>
       </DataFiles>
       <TempFiles>
