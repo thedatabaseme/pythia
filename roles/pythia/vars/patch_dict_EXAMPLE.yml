@@ -47,3 +47,10 @@ patch:
     opatch_dir:
     opatch_file: p6880880_122010_Linux-x86-64.zip
     desc: "Database Release Update 18.8.0.0.191015"
+  33239276:
+    patch_id: 33239276
+    patch_dir: patches
+    patch_file: p33239276_210000_Linux-x86-64.zip
+    opatch_dir:
+    opatch_file: p6880880_122010_Linux-x86-64.zip
+    desc: "Database Release Update 21.4.0"
