@@ -27,6 +27,7 @@ Please also check the `vars/rdbms_dict.yml` and set the following Variables as y
 |oracle_base|Oracle Base Directory for the specified RDBMS|
 |oracle_home|Oracle Home Directory for the specified RDBMS|
 |oracle_inventory|Path to the Oracle Inventory Location|
+|container_database|Controls, if a database created for the specified<br> release, should be a CDB or not. NON-CDB<br> are desupported starting with 21c
 |additional_dir|You may specify an additional directory that should be<br> created / permission set when install RDBMS|
 |space_needed_gb|Space approximately in GB for installing the RDBMS. Respects,<br> that there is probably a Patch installed on top|
 |desc|Description of the RDBMS|
