@@ -12,11 +12,32 @@
 ####################################################################################################################
 
 rdbms:
+  21EE:
+    rdbms_dir:
+    oracle_base: /u01/app/oracle
+    oracle_home: /u01/app/oracle/product/21.0.0/dbhome_1
+    oracle_inventory: /u01/app/oracleInventory
+    container_database: true
+    additional_dir:
+    rdbms_file: LINUX.X64_213000_db_home.zip
+    space_needed_gb: 12
+    desc: "Database RDBMS Base Release 21.3 Enterprise Edition"
+  21SE2:
+    rdbms_dir:
+    oracle_base: /u01/app/oracle
+    oracle_home: /u01/app/oracle/product/21.0.0/dbhome_1
+    oracle_inventory: /u01/app/oracleInventory
+    container_database: true
+    additional_dir:
+    rdbms_file: LINUX.X64_213000_db_home.zip
+    space_needed_gb: 12
+    desc: "Database RDBMS Base Release 21.3 Standard Edition 2"
   19EE:
     rdbms_dir:
     oracle_base: /u01/app/oracle
     oracle_home: /u01/app/oracle/product/19.0.0/dbhome_1
     oracle_inventory: /u01/app/oracleInventory
+    container_database: false
     additional_dir:
     rdbms_file: LINUX.X64_193000_db_home.zip
     space_needed_gb: 12
@@ -26,6 +47,7 @@ rdbms:
     oracle_base: /u01/app/oracle
     oracle_home: /u01/app/oracle/product/19.0.0/dbhome_1
     oracle_inventory: /u01/app/oracleInventory
+    container_database: false
     additional_dir:
     rdbms_file: LINUX.X64_193000_db_home.zip
     space_needed_gb: 12
@@ -35,6 +57,7 @@ rdbms:
     oracle_base: /u01/app/oracle
     oracle_home: /u01/app/oracle/product/18.0.0/dbhome_1
     oracle_inventory: /u01/app/oracleInventory
+    container_database: false
     additional_dir:
     rdbms_file: LINUX.X64_180000_db_home.zip
     space_needed_gb: 12
@@ -44,6 +67,7 @@ rdbms:
     oracle_base: /u01/app/oracle
     oracle_home: /u01/app/oracle/product/19.0.0/dbhome_1
     oracle_inventory: /u01/app/oracleInventory
+    container_database: false
     additional_dir:
     rdbms_file: LINUX.X64_180000_db_home.zip
     space_needed_gb: 12

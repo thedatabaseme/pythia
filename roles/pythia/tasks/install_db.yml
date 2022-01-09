@@ -78,7 +78,7 @@
 - name: Create Database {{ oracle_sid }} with dbca
   become: yes
   become_user: "{{ oracle_user }}"
-  shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/dbca -silent -createDatabase -templateName {{ rdbms[oracle_version|string].oracle_home }}/assistants/dbca/templates/{{ oracle_version }}_Database.rsp -sid {{ oracle_sid }} -gdbName {{ oracle_sid }} -createAsContainerDatabase false -sysPassword {{ sys_user_password }} -systemPassword {{ system_user_password }} -emConfiguration {{ emexpress }} -ignorePreReqs -honorControlFileInitParam"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/dbca -silent -createDatabase -templateName {{ rdbms[oracle_version|string].oracle_home }}/assistants/dbca/templates/{{ oracle_version }}_Database.rsp -sid {{ oracle_sid }} -gdbName {{ oracle_sid }} -createAsContainerDatabase {{ rdbms[oracle_version|string].container_database }} -sysPassword {{ sys_user_password }} -systemPassword {{ system_user_password }} -emConfiguration {{ emexpress }} -ignorePreReqs -honorControlFileInitParam"
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
   environment:
