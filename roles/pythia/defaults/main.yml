@@ -8,6 +8,7 @@
 #  - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy or change. The Version String has to be existant within the RDBMS Dictionary (rdbms_dict.yml under vars folder)
 #  - client_version (Default 19CLNT): The Version of the Oracle Client you want to deploy. The Version String has to be existant within the Client Dictionary (client_dict.yml under vars folder)
 #  - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only needed when starting the playbook with the "db" tag, for creating a Database.
+#  - oracle_pdb_name (Default NULL): Name of the Plugable Database you want to get created during Database creation. Needs to be set in order to get it created.
 #  - nls_length_semantics (Default BYTE): Oracle Parameter NLS_LENGTH_SEMANTICS, can be BYTE or CHAR. When set, it will be placed in the Database creation Response Files
 #  - character_set (Default AL32UTF8): Character Set of the Database when creating.
 #  - national_character_set (Default AL16UTF16): National Character Set of the Database when creating
@@ -77,6 +78,7 @@ sqlscriptoutput: false
 # Control Variables for Installation
 oracle_version: 19EE
 oracle_sid: ""
+oracle_pdb_name: ""
 install_patch: ""
 install_rpm: ""
 reboot_required: false

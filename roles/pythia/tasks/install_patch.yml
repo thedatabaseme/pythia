@@ -196,6 +196,8 @@
   become: yes
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch apply -silent -oh {{ rdbms[oracle_version|string].oracle_home }}"
+  environment:
+    ORACLE_BASE: "{{ rdbms[oracle_version|string].oracle_base }}"
   args:
     chdir: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_id }}"
   register: result
@@ -242,6 +244,19 @@
     - patch
     - patchonly
 
+- name: Start all PDBs for patching
+  become: yes
+  become_user: "{{ oracle_user }}"
+  shell: "echo -e \"alter pluggable database all open;\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  environment:
+    ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
+    ORACLE_SID: "{{ item }}"
+  when: (sid_list.stdout_lines|length > 0) and (patch[install_patch|int].patch_all_pdbs is defined) and (patch[install_patch|int].patch_all_pdbs|bool) and (rdbms[oracle_version|string].container_database|bool)
+  with_items: "{{ sid_list.stdout_lines }}"
+  tags:
+    - patch
+    - patchonly
+
 ###################################################################################
 # The Database itself is not patched with datapatch.
 # Tag: patch, patchonly
@@ -254,6 +269,7 @@
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
     ORACLE_SID: "{{ item }}"
+    ORACLE_BASE: "{{ rdbms[oracle_version|string].oracle_base }}"
   when: (sid_list.stdout_lines|length > 0)
   with_items: "{{ sid_list.stdout_lines }}"
   tags:

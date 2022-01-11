@@ -1,0 +1,108 @@
+<DatabaseTemplate name="linux_21SE2_dbca_template_sec0" description=" " version="21.0.0.0.0">
+   <CommonAttributes>
+      <option name="OMS" value="false" includeInPDBs="false"/>
+      <option name="JSERVER" value="false" includeInPDBs="false"/>
+      <option name="SPATIAL" value="false" includeInPDBs="false"/>
+      <option name="IMEDIA" value="false" includeInPDBs="false"/>
+      <option name="ORACLE_TEXT" value="true" includeInPDBs="true">
+         <tablespace id="SYSAUX"/>
+      </option>
+      <option name="SAMPLE_SCHEMA" value="false" includeInPDBs="false"/>
+      <option name="CWMLITE" value="false" includeInPDBs="false"/>
+      <option name="DV" value="false" includeInPDBs="false"/>
+   </CommonAttributes>
+   <Variables/>
+   <CustomScripts Execute="false"/>
+   <InitParamAttributes>
+      <InitParams>
+         <initParam name="backup_tape_io_slaves" value="TRUE"/>
+         <initParam name="db_name" value="{{ oracle_sid }}"/>
+         <initParam name="db_domain" value=""/>
+         <initParam name="dispatchers" value="(PROTOCOL=TCP) (SERVICE={{ oracle_sid }}XDB)"/>
+         <initParam name="audit_file_dest" value="{{ audit_dest }}"/>
+         <initParam name="compatible" value="21.0.0"/>
+         <initParam name="remote_login_passwordfile" value="EXCLUSIVE"/>
+         <initParam name="log_archive_dest_1" value="'LOCATION={{ archive_dest }}'"/>
+         <initParam name="sga_target" value="{{ sga_max_size }}" unit="GB"/>
+          <initParam name="sga_max_size" value="{{ sga_max_size }}" unit="GB"/>
+         <initParam name="processes" value="300"/>
+         <initParam name="recyclebin" value="off"/>
+         <initParam name="undo_tablespace" value="UNDOTBS1"/>
+         <initParam name="control_files" value="(&quot;{{ admin_dest }}/control01{{ oracle_sid }}.ctl&quot;, &quot;{{ redo_dest1 }}/control02{{ oracle_sid }}.ctl&quot;)"/>
+         <initParam name="control_management_pack_access" value="NONE"/>
+         <initParam name="diagnostic_dest" value="{{ diag_dest }}"/>
+         <initParam name="db_recovery_file_dest" value="{{ fast_recovery_area }}"/>
+         <initParam name="db_recovery_file_dest_size" value="4" unit="GB"/>
+         <initParam name="job_queue_processes" value="10"/>
+         <initParam name="audit_trail" value="DB"/>
+         <initParam name="use_large_pages" value="{{ use_large_pages }}"/>
+         <initParam name="log_archive_format" value="arc_{{ oracle_sid }}_%s_%t_%r.dbf"/>
+         <initParam name="nls_territory" value="AMERICA"/>
+         <initParam name="db_block_size" value="8192"/>
+         <initParam name="open_cursors" value="500"/>
+         <initParam name="nls_language" value="AMERICAN"/>
+         <initParam name="nls_length_semantics" value="{{ nls_length_semantics }}"/>
+         <initParam name="pga_aggregate_target" value="{{ pga_aggregate_target }}" unit="GB"/>
+      </InitParams>
+      <MiscParams>
+         <customSGA>false</customSGA>
+         <characterSet>{{ character_set }}</characterSet>
+         <nationalCharacterSet>{{ national_character_set }}</nationalCharacterSet>
+         <archiveLogMode>true</archiveLogMode>
+         <dataVaultEnabled>false</dataVaultEnabled>
+         <initParamFileName>{{ rdbms[oracle_version|string].oracle_home }}/dbs/init{{ oracle_sid }}.ora</initParamFileName>
+      </MiscParams>
+      <SPfile useSPFile="true">{{ rdbms[oracle_version|string].oracle_home }}/dbs/spfile{{ oracle_sid }}.ora</SPfile>
+   </InitParamAttributes>
+   <StorageAttributes>
+      <DataFiles>
+         <Location>{ORACLE_HOME}/assistants/dbca/templates/Seed_Database.dfb</Location>
+         <DatafilesEncrypted>false</DatafilesEncrypted>
+         <SourceDBName cdb="true" db_id="112743258">seeddata</SourceDBName>
+         <Name id="3" Tablespace="SYSAUX" Contents="PERMANENT" Size="2048" autoextend="true" blocksize="8192" con_id="1" datafileEncrypted="false">{{ data_dest }}/sysaux01{{ oracle_sid }}.dbf</Name>
+         <Name id="1" Tablespace="SYSTEM" Contents="PERMANENT" Size="2048" autoextend="true" blocksize="8192" con_id="1" datafileEncrypted="false">{{ data_dest }}/system01{{ oracle_sid }}.dbf</Name>
+         <Name id="4" Tablespace="UNDOTBS1" Contents="UNDO" Size="1024" autoextend="true" blocksize="8192" con_id="1" datafileEncrypted="false">{{ data_dest }}/undotbs101{{ oracle_sid }}.dbf</Name>
+         <Name id="7" Tablespace="USERS" Contents="PERMANENT" Size="50" autoextend="true" blocksize="8192" con_id="1" datafileEncrypted="false">{{ data_dest }}/users01{{ oracle_sid }}.dbf</Name>
+      </DataFiles>
+      <TempFiles>
+         <Name id="1" Tablespace="TEMP" Contents="TEMPORARY" Size="1024" con_id="1" datafileEncrypted="false">{{ temp_dest }}/temp01{{ oracle_sid }}.dbf</Name>
+      </TempFiles>
+      <ControlfileAttributes id="Controlfile">
+         <maxDatafiles>500</maxDatafiles>
+         <maxLogfiles>16</maxLogfiles>
+         <maxLogMembers>3</maxLogMembers>
+         <maxLogHistory>292</maxLogHistory>
+         <maxInstances>8</maxInstances>
+		 <image name="control01{{ oracle_sid }}.ctl" filepath="{{ admin_dest }}"/>
+		 <image name="control02{{ oracle_sid }}.ctl" filepath="{{ redo_dest1 }}"/>
+      </ControlfileAttributes>
+      <RedoLogGroupAttributes id="1">
+         <reuse>false</reuse>
+         <fileSize unit="MB">500</fileSize>
+         <Thread>1</Thread>
+         <member ordinal="0" memberName="redo01a{{ oracle_sid }}.log" filepath="{{ redo_dest1 }}"/>
+         <member ordinal="1" memberName="redo01b{{ oracle_sid }}.log" filepath="{{ redo_dest2 }}"/>
+      </RedoLogGroupAttributes>
+      <RedoLogGroupAttributes id="2">
+         <reuse>false</reuse>
+         <fileSize unit="MB">500</fileSize>
+         <Thread>1</Thread>
+         <member ordinal="0" memberName="redo02a{{ oracle_sid }}.log" filepath="{{ redo_dest1 }}"/>
+         <member ordinal="1" memberName="redo02b{{ oracle_sid }}.log" filepath="{{ redo_dest2 }}"/>
+      </RedoLogGroupAttributes>
+      <RedoLogGroupAttributes id="3">
+         <reuse>false</reuse>
+         <fileSize unit="MB">500</fileSize>
+         <Thread>1</Thread>
+         <member ordinal="0" memberName="redo03a{{ oracle_sid }}.log" filepath="{{ redo_dest1 }}"/>
+         <member ordinal="1" memberName="redo03b{{ oracle_sid }}.log" filepath="{{ redo_dest2 }}"/>
+      </RedoLogGroupAttributes>
+      <RedoLogGroupAttributes id="4">
+         <reuse>false</reuse>
+         <fileSize unit="MB">500</fileSize>
+         <Thread>1</Thread>
+         <member ordinal="0" memberName="redo04a{{ oracle_sid }}.log" filepath="{{ redo_dest1 }}"/>
+         <member ordinal="1" memberName="redo04b{{ oracle_sid }}.log" filepath="{{ redo_dest2 }}"/>
+      </RedoLogGroupAttributes>
+   </StorageAttributes>
+</DatabaseTemplate>
