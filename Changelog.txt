@@ -1,5 +1,26 @@
 Changelog of Pythia:
 
+Version 2.2.0
+  - New Feature #17: Pythia now supports Oracle Database 21c as well as Multitenant / Container Databases
+    
+    Especially the support for Multitenant Databases has brought some Changes.
+    It's now necessary to provide the information if the Databases running on a
+    specific RDBMS is a CDB or not. It's not a real good implementation to control
+    this in the rdbms_dict.yml cause the fact if it is a CDB or not, is defined per
+    database and not per RDBMS. But since 21c no longer supports any NON-CDB setups,
+    we implemented it there. The fact if is a CDB or not is controlled by setting
+    the variable container_database within rdbms_dict.yml.
+    Second major adjustment can be found during the patching of a container database.
+    You can control if you want to get all PDBs within a CDB started up after the
+    patch has been applied to the RDBMS by using the variable patch_all_pdbs within
+    the patch_dict.yml. Keep in mind, this variable is optional within the dictionary,
+    so you can specify it but you don't have to. When the variable patch_all_pdbs is
+    set to false, only PDBs that are started up during CDB startup (by using a trigger) are
+    opened and therefore patched.
+    When you missed the point for patching all PDBs while patching a CDB with Pythia,
+    you have to patch the PDBs (by using datapatch) manually on your own. Pythia will
+    not know if there are PDBs not patched.
+
 Version 2.1.0
   - New Feature #1: Added documentation / instructions under docs/*.md for the most common tasks you can do with Pythia
   - New Feature #13: Implemented Export / Import mechanism over Datapump Network_link
