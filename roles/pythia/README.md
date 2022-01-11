@@ -49,6 +49,7 @@ main.yml Variables (can be set when calling the playbook, see Examples):
   - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy or change. The Version String has to be existant within the RDBMS Dictionary (rdbms_dict.yml under vars folder)
   - client_version (Default 19CLNT): The Version of the Oracle Client you want to deploy. The Version String has to be existant within the Client Dictionary (client_dict.yml under vars folder)
   - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only needed when starting the playbook with the "db" tag, for creating a Database.
+  - oracle_pdb_name (Default NULL): Name of the Plugable Database you want to get created during Database creation. Needs to be set in order to get it created.
   - space_needed_gb: Space approximately in GB for installing the RDBMS. Respects, that there is probably a Patch installed on top. OVERLOADS rdbms_dict.yml space_needed_gb. SHOULD NOT BE SPECIFIED WITHIN HERE. SHOULD BE SPECIFIED AS EXTRA VARIABLE IN PLAYBOOK CALL.
   - nls_length_semantics (Default BYTE): Oracle Parameter NLS_LENGTH_SEMANTICS, can be BYTE or CHAR. When set, it will be placed in the Database creation Response Files
   - character_set (Default AL32UTF8): Character Set of the Database when creating.
@@ -106,6 +107,7 @@ patch_dict.yml (a Dictionary File for Patches that can be installed by Pythia):
   - patch_id: Unique Patch ID of the Patch
   - patch_dir: Path where the Patch is located on the Stage Directory, relative to the local_stage_directory Variable
   - patch_file: Filename of the Patch Archive
+  - patch_all_pdbs: Can be true or false. When defined and the according RDBMS is enabled as container_database (see rdbms_dict.yml), all PDBs will get opened and patched during patching.
   - opatch_dir: Path where the needed OPatch Version is located on the Stage Directory, relative to the local_stage_directory Variable
   - opatch_file: Filename of the OPatch Archive
   - desc: Description of the Patch
@@ -116,6 +118,7 @@ rdbms_dict.yml (a Dictionary File for RDBMS that can be installed by Pythia):
   - oracle_base: Oracle Base Directory for the specified RDBMS
   - oracle_home: Oracle Home Directory for the specified RDBMS
   - oracle_inventory: Path to the Oracle Inventory Location
+  - container_database: Controls, if a database created for the specified release, should be a CDB or not. NON-CDB are desupported starting with 21c
   - space_needed_gb: Space approximately needed in GB for installing the RDBMS. This value is checked in precheck_fsfree.yml before installing a RDBMS. The value should respect, that you are planning to install a Patchset on Top of the RDBMS. Good initial Value are 12GB of Free Space. 
   - desc: Description of the RDBMS
 

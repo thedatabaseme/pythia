@@ -19,6 +19,7 @@ Please also check the vars/patch_dict.yml and set the following Variables as you
 |patch_id |Unique Patch ID|
 |patch_dir |Path where the patch is located, relative to the `local_stage_directory` variable. <br>Must reside under `local_stage_directory`|
 |patch_file|Filename of the Patch Archive|
+|patch_all_pdbs|Can be `true` or `false`. When defined and the according RDBMS is enabled<br> as `container_database` (see `rdbms_dict.yml`), all PDBs will get opened<br> and patched during patching.
 |opatch_dir|Path where the needed OPATCH for patch installation is located. Relative to the `local_stage_directory` variable. <br>Must reside under `local_stage_directory`|
 |oracle_inventory|Path to the Oracle Inventory Location|
 |opatch_file|Filename of the needed OPATCH archive|

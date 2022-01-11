@@ -8,4 +8,6 @@
 /roles/pythia/templates/18SE2_Database.rsp.j2
 /roles/pythia/templates/19EE_Database.rsp.j2
 /roles/pythia/templates/19SE2_Database.rsp.j2
+/roles/pythia/templates/21EE_Database.rsp.j2
+/roles/pythia/templates/21SE2_Database.rsp.j2
 .idea

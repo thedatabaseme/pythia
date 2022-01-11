@@ -20,13 +20,14 @@ During the Prerequisite Check that Pythia does everytime you let her go, the acc
 | Variable Name | Description              | Default Value |
 |---------------|--------------------------|---------------|
 |oracle_version |The Version of the RDBMS and Database you want to deploy or change.<br>The Version String has to be existant within the RDBMS Dictionary (`rdbms_dict.yml` under vars folder)|`19EE`|
-|oracle_sid|The SID of the Oracle Database you want to install. Only needed when starting <br>the playbook with the `db` tag, for creating a Database|none|
+|oracle_sid|The SID of the Oracle Database you want to install. Only needed when starting <br>the playbook with the `db` tag, for creating a Database|`NONE`|
 
 ### Optional Variables
 
 
 | Variable Name | Description              | Default Value |
 |---------------|--------------------------|---------------|
+|oracle_pdb_name|Name of the Plugable Database you want to get created<br> during Database creation. Needs to be set in order to get it created.|`NONE`|
 |sga_max_size |Size of the SGA in GB of the Oracle Database to be created. Both Parameters <br>sga_max_size and sga_target will be set to this value for your Instance Configuration|`2`|
 |pga_aggregate_target|Size of the PGA in GB of the Oracle Database to be created. Will be set as <br>Oracle Parameter pga_aggregate_target|`1`|
 |use_large_pages|Can be `TRUE` or `ONLY`. Will automatically be set to `ONLY` when the hugepage tag <br>is specified|`TRUE`|
