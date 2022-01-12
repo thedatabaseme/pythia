@@ -24,8 +24,8 @@ jobs:
         #   playbook_1.yml
         #   playbook_2.yml
         targets: |
-          "pythia.yml"
-          "roles/pythia/"
+          pythia.yml
+          roles/pythia/
         override-deps: |
           ansible-lint==5.3.2
         args: "-p -x command-instead-of-shell -x risky-shell-pipe -x no-jinja-when"
