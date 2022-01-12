@@ -33,7 +33,7 @@
 
 - name: Print Dictionary Information for SID {{ oracle_sid }} and Version {{ oracle_version }}
   debug:
-    msg: 
+    msg:
       - "{{ rdbms[oracle_version|string] }}"
       - "Oracle SID will be: {{ oracle_sid }}"
       - "The following directories will be created: {{ sid_directory_list }}"

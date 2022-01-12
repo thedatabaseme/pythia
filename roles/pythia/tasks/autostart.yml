@@ -63,7 +63,7 @@
     owner: root
     group: root
     mode: 0644
-    force: no
+    force: false
   become: true
   tags:
     - autostart
@@ -75,7 +75,7 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0750
-    force: yes
+    force: true
   become: true
   become_user: "{{ oracle_user }}"
   tags:
@@ -88,7 +88,7 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0750
-    force: yes
+    force: true
   become: true
   become_user: "{{ oracle_user }}"
   tags:
@@ -116,8 +116,8 @@
 - name: Reload Systemd Config
   become: true
   systemd:
-    daemon_reload: yes
-    enabled: yes
+    daemon_reload: true
+    enabled: true
     name: "dbora{{ oracle_sid }}"
   tags:
     - autostart

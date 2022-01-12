@@ -68,7 +68,7 @@
 
 # ####################################################################
 # Set the Fact for future default users password. Has to be generated
-# at this stage. Else, the password for the default users would be 
+# at this stage. Else, the password for the default users would be
 # the same than for sys / system users.
 #
 # TAG: always

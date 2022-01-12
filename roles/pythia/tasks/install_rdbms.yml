@@ -158,7 +158,7 @@
 
 ###################################################################################
 # Because Oracle will error out of the Installation when a RedHat Release = 8
-# distribution is used, we check for that and pretend to be an Oracle Linux 7. 
+# distribution is used, we check for that and pretend to be an Oracle Linux 7.
 # This is, why we call the runInstaller twice here.
 # Tag: rdbms
 ###################################################################################
@@ -195,4 +195,3 @@
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
   tags:
     - rdbms
-  

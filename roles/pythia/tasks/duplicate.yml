@@ -3,7 +3,7 @@
 ###################################################################################
 # Include Var File for alternative Users who's passwords have to be preserved.
 # Only if the File exists under var/user_pwd_preservation_{{ duplicate_target_sid }}.yml
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Include User List for Password preservation
@@ -23,12 +23,14 @@
 ###################################################################################
 # Before Duplicating a Database we need to check if this Database is already
 # existant and running.
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
+
 - name: Check if Source Oracle SID {{ duplicate_source_sid }} already exists
   shell: "grep -w {{ duplicate_source_sid }} /etc/oratab"
   become: true
   register: result
+  changed_when: false
   failed_when: "'ERROR' in result.stderr"
   delegate_to: "{{ duplicate_source_host }}"
   run_once: true
@@ -51,6 +53,7 @@
 - name: Gather Oracle Home used by Source SID {{ duplicate_source_sid }}
   become: true
   shell: "cat /etc/oratab | grep {{ duplicate_source_sid }} | awk -F \":\" {'print$2'}"
+  changed_when: false
   args:
     removes: /etc/oratab
   register: duplicate_source_home
@@ -63,6 +66,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"select status from v\\$instance;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_source_sid }}"
@@ -89,13 +93,14 @@
 ###################################################################################
 # We create needed Directory Structure for the Target Database. Before so, we
 # check which distinct Filesystems will be needed from the Source Database
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Gather distinct Datafile Directories from Source Database
   become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"set heading off; \\n set lines 200; \\n set pages 100; \\n set feedback off; \\n select distinct regexp_substr(name,'^.*/') from v\\$datafile;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_source_sid }}"
@@ -138,11 +143,12 @@
 # Check if the specified Oracle Home for the Source is also installed on the
 # Target System. It is assumed, that the RDBMS Installation Path is the same
 # for Source and Target side.
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Get Oracle Inventory Location on Target Server
   shell: "grep -w inventory_loc /etc/oraInst.loc | awk -F \"=\" {'print$2'}"
+  changed_when: false
   become: true
   register: oracle_inventory
   failed_when: "'ERROR' in result.stderr"
@@ -164,6 +170,7 @@
 
 - name: Check if Oracle Home specified is also installed on the Target Server
   shell: "grep -w {{ duplicate_source_home.stdout }} {{ oracle_inventory.stdout }}/ContentsXML/inventory.xml"
+  changed_when: false
   become: true
   register: result
   failed_when: "'ERROR' in result.stderr"
@@ -187,13 +194,14 @@
 # Before Duplicating a Database we need to check if the Target System has a running
 # Database and if so, this database will be removed before starting the duplicate.
 # This will be controlled by the variable duplicate_remove_target
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Check if Target Database is Open
   become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"set heading off; \\n set feedback off; \\n select status from v\\$instance;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -222,6 +230,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"set heading off; \\n set lines 500; \\n set feedback off; \\n spool {{ remote_sql_stage_directory }}/preserve_passwords_{{ duplicate_target_sid }}.sql; \\n select 'alter user ' || name || ' identified by values ''' || spare4 || ''';' from user\\$ where name in ({{ duplicate_preserve_pwd_user_list }}) and spare4 is not null;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  changed_when: true
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -238,6 +247,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"set heading off; \\n set lines 500; \\n set feedback off; \\n select value from v\\$parameter where name = 'control_files';\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -315,7 +325,7 @@
 
 ###################################################################################
 # Check the Listener and TNS Configuration on Source and Target Side
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Gather Listeners running on Source System Oracle Home {{ duplicate_source_home.stdout }}
@@ -440,7 +450,7 @@
 
 ###################################################################################
 # Create init.ora and copy Password File
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Setup to takeover SPFILE from Source or not
@@ -515,7 +525,7 @@
 # This will only happen, when the according Par-Files of the Archivelog Backup
 # can be found under $ORACLE_HOME/tds_rman
 # See Issue #125 for more details
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Stat if the Parfile for Archivelog Backups exist
@@ -556,7 +566,7 @@
 
 ###################################################################################
 # Start Target Instance and start duplicate
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Check if SPFILE currently exists on Target
@@ -612,7 +622,7 @@
 ###################################################################################
 # The Duplicate runs in a Block to be able to "rescue" on fail. On Rescue, the
 # maybe backed up rman_arc.par File will be copied back.
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Starting Duplicate
@@ -647,7 +657,7 @@
 ###################################################################################
 # If Parameters should be preserved from existing Target Database, then let's
 # restore the old configuration now.
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Shutdown Target Database for restoring the original SPFILE
@@ -703,7 +713,7 @@
 
 ###################################################################################
 # We are setting the backed up Passwords of the original Target Database here
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Preprocess Scripts for execution
@@ -747,7 +757,7 @@
 ###################################################################################
 # We check if there are SQL Scripts to be executed and execute them to the
 # newly created Target Database
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Copy Scripts to {{ remote_sql_stage_directory }}
@@ -795,7 +805,7 @@
 
 ###################################################################################
 # Show the SQL Script Output if the scriptoutput Variable is specified.
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: SQL Script Output
@@ -807,7 +817,7 @@
 
 ###################################################################################
 # Cleanup the Scripts from the Remote Staging Area
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Cleanup Scripts

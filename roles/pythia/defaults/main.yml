@@ -11,11 +11,11 @@
 #  - client_version (Default 19CLNT): The Version of the Oracle Client you want to deploy.
 #    The Version String has to be existant within the Client Dictionary
 #    (client_dict.yml under vars folder)
-#  - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only 
+#  - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only
 #    needed when starting the playbook with the "db" tag, for creating a Database.
 #  - oracle_pdb_name (Default NULL): Name of the Plugable Database you want to get created
 #    during Database creation. Needs to be set in order to get it created.
-#  - nls_length_semantics (Default BYTE): Oracle Parameter NLS_LENGTH_SEMANTICS, can be 
+#  - nls_length_semantics (Default BYTE): Oracle Parameter NLS_LENGTH_SEMANTICS, can be
 #    BYTE or CHAR. When set, it will be placed in the Database creation Response Files
 #  - character_set (Default AL32UTF8): Character Set of the Database when creating.
 #  - national_character_set (Default AL16UTF16): National Character Set of the Database when creating
@@ -141,9 +141,9 @@ sysctl_stable: true
 client_version: 19CLNT
 client_install_type: "Administrator"
 
-#Control Variables for Upgrade
+# Control Variables for Upgrade
 oracle_source_version: 18EE
-oracle_target_version: 19EE 
+oracle_target_version: 19EE
 upgrade_log_dir: "/oracle/cfgtoollogs/autoupgrade/{{ ansible_date_time.date }}_{{ ansible_date_time.time }}"
 upgrade_mode: analyze
 autoupgrade_jar_dir: /db/oracle/19/rdbms/linux/x86_64/upgrade

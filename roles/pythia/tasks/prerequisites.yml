@@ -10,7 +10,7 @@
   getent:
     database: group
     key: "{{ oracle_group }}"
-    fail_key: no
+    fail_key: false
   register: group_exists
   tags:
     - rdbms
@@ -41,7 +41,7 @@
   getent:
     database: passwd
     key: "{{ oracle_user }}"
-    fail_key: no
+    fail_key: false
   register: user_exists
   tags:
     - rdbms
@@ -182,7 +182,7 @@
     state: present
   become: true
   register: sysctl_status
-  check_mode: yes
+  check_mode: true
   when: (sysctl_exists.stat.exists | bool) and (sysctl_exists.stat.exists is defined)
   tags:
     - db
@@ -301,7 +301,7 @@
     owner: root
     group: root
     mode: 0644
-    force: yes
+    force: true
   become: true
   when: (sysctl_stable | bool) or (not sysctl_exists.stat.exists | bool)
   tags:
@@ -317,7 +317,7 @@
     owner: root
     group: root
     mode: 0644
-    force: no
+    force: false
   become: true
   when: (sysctl_stable | bool) or (not sysctl_exists.stat.exists | bool)
   tags:
@@ -328,7 +328,7 @@
     name: vm.hugetlb_shm_group
     value: "{{ oracle_gid }}"
     sysctl_file: /etc/sysctl.d/97-oracle-db-sysctl.conf
-    reload: no
+    reload: false
   when: ansible_distribution == 'SLES'
   become: true
   tags:
@@ -341,7 +341,7 @@
     name: "{{ item }}"
     state: absent
     sysctl_file: /etc/sysctl.conf
-    reload: no
+    reload: false
   with_items:
     - "fs.file-max"
     - "kernel.shmmax"
@@ -397,7 +397,7 @@
     owner: root
     group: root
     mode: 0644
-    force: no
+    force: false
   become: true
   tags:
     - rdbms
@@ -417,7 +417,7 @@
   lineinfile:
     state: present
     dest: /etc/default/grub
-    backrefs: yes
+    backrefs: true
     regexp: '^(GRUB_CMDLINE_LINUX=(?!.* transparent_hugepage)\"[^\"]+)(\".*)'
     line: '\1 transparent_hugepage=never\2'
   when: transparent_hugepages.stdout|length == 0 and ansible_distribution != 'SLES'
@@ -430,7 +430,7 @@
   lineinfile:
     state: present
     dest: /etc/default/grub
-    backrefs: yes
+    backrefs: true
     regexp: '^(GRUB_CMDLINE_LINUX_DEFAULT=(?!.* transparent_hugepage)\"[^\"]+)(\".*)'
     line: '\1 transparent_hugepage=never\2'
   when: transparent_hugepages.stdout|length == 0 and ansible_distribution == 'SLES'
@@ -475,7 +475,7 @@
     mode: 0750
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
-    backup: yes
+    backup: true
   tags:
     - db
     - prepare
@@ -488,7 +488,7 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0644
-    create: yes
+    create: true
   tags:
     - db
     - prepare
@@ -501,7 +501,7 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0644
-    create: yes
+    create: true
   tags:
     - db
     - prepare

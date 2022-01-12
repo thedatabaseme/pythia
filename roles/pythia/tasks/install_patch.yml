@@ -172,7 +172,7 @@
   with_items: "{{ listener_list.stdout_lines }}"
   tags:
     - patch
-    - patchonly 
+    - patchonly
 
 - name: Stopping all Databases on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
   become: true
