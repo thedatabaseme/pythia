@@ -6,7 +6,7 @@
 ###################################################################################
 
 - name: Check which Oracle Home is used by {{ oracle_sid }}
-  become: yes
+  become: true
   shell: "cat /etc/oratab | grep -w {{ oracle_sid }} | awk -F \":\" {'print$2'}"
   args:
     removes: /etc/oratab
@@ -34,13 +34,13 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0755
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   tags:
     - sqlscript
 
 - name: Gather Scripts for execution
-  become: yes
+  become: true
   find:
     paths: "{{ remote_sql_stage_directory }}/"
     file_type: file
@@ -55,26 +55,28 @@
 ###################################################################################
 
 - name: Preprocess Scripts for execution
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   lineinfile:
     path: "{{ item.path }}"
     line: "exit;"
     state: present
-    create: yes
+    create: true
+    mode: 0644
   with_items:
     - "{{ script_file_list.files }}"
   tags:
     - sqlscript
 
 - name: Executing SQL Scripts
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ home_list.stdout_lines[0] }}/bin/sqlplus / as sysdba @{{ item.path }}"
+  changed_when: "script_output.rc == 0"
   environment:
     ORACLE_HOME: "{{ home_list.stdout_lines[0] }}"
     ORACLE_SID: "{{ oracle_sid }}"
-  with_items: 
+  with_items:
     - "{{ script_file_list.files }}"
   register: script_output
   tags:
@@ -96,7 +98,7 @@
 ###################################################################################
 
 - name: Cleanup Scripts
-  become: yes
+  become: true
   file:
     path: "{{ item.path }}"
     state: absent

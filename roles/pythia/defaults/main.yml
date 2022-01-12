@@ -5,53 +5,107 @@
 #  - oracle_uid (Default 1500): User ID of the Oracle OS User
 #  - oracle_gid (Default 1500): Group ID of the Oracle OS Group
 #  - oracle_home_dir (Default /home/{{ oracle_user }}: Home Directory of the Oracle OS User
-#  - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy or change. The Version String has to be existant within the RDBMS Dictionary (rdbms_dict.yml under vars folder)
-#  - client_version (Default 19CLNT): The Version of the Oracle Client you want to deploy. The Version String has to be existant within the Client Dictionary (client_dict.yml under vars folder)
-#  - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only needed when starting the playbook with the "db" tag, for creating a Database.
-#  - oracle_pdb_name (Default NULL): Name of the Plugable Database you want to get created during Database creation. Needs to be set in order to get it created.
-#  - nls_length_semantics (Default BYTE): Oracle Parameter NLS_LENGTH_SEMANTICS, can be BYTE or CHAR. When set, it will be placed in the Database creation Response Files
+#  - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy
+#    or change. The Version String has to be existant within the RDBMS Dictionary
+#    (rdbms_dict.yml under vars folder)
+#  - client_version (Default 19CLNT): The Version of the Oracle Client you want to deploy.
+#    The Version String has to be existant within the Client Dictionary
+#    (client_dict.yml under vars folder)
+#  - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only 
+#    needed when starting the playbook with the "db" tag, for creating a Database.
+#  - oracle_pdb_name (Default NULL): Name of the Plugable Database you want to get created
+#    during Database creation. Needs to be set in order to get it created.
+#  - nls_length_semantics (Default BYTE): Oracle Parameter NLS_LENGTH_SEMANTICS, can be 
+#    BYTE or CHAR. When set, it will be placed in the Database creation Response Files
 #  - character_set (Default AL32UTF8): Character Set of the Database when creating.
 #  - national_character_set (Default AL16UTF16): National Character Set of the Database when creating
-#  - sga_max_size (Default 2): Size of the SGA in GB of the Oracle Database to be created. Both Parameters sga_max_size and sga_target will be set to this value for your Instance Configuration
-#  - pga_aggregate_target (Default 1): Size of the PGA in GB of the Oracle Database to be created. Will be set as Oracle Parameter pga_aggregate_target
-#  - use_large_pages (Default TRUE): Can be TRUE or ONLY. Will automatically be set to ONLY when the hugepage tag is specified
-#  - management_pack_access (Default NONE): Controls the Parameter control_management_pack_access when creating a new Database. Values can be in: "NONE", "DIAGNOSTIC" or "DIAGNOSTIC+TUNING". Be sure, that you have licenced the corrent Enterprise Option (Tuning and or Diagnostic Pack) before setting this Parameter other than NONE. In the Standard Edition 2 of Oracle, it is not possible to licence this Features, so the Variable will not have impact on this Response File Templates.
-#  - install_patch (Default NULL): The Patch ID you want to install on a new Database or an existing RDBMS / Database. Only needed when starting the playbook with the "patch" or "patchonly" tag. Optional when starting the playbook with the "db" or "rdbms" tag. The Value of the install_patch Variable has to be defined in the patch_dictionary.yml File under the vars folder.
-#  - install_rpm (Default NULL): The RPM Name you want to install on the Database Server. Only needed when starting the playbook with the "rpm" tag. The Value of the install_rpm Variable has to be defined in the rpm_dictionary.yml File under the vars folder.
-#  - listener_port (Default 1521): Port on which a new listener will be created. Only needed when starting the playbook with the "db" or "listener" tag.
-#  - listener_prefix (Default LSNR_): The Prefix with which a new listener will be created after the Database creation. The SID of the Database will always be appended to the prefix. Only needed when starting the playbook with the "db" or "listener" tag.
-#  - emexpress (Default DBEXPRESS): Specifies if the EM Express should be installed / configured when creating a Database. There are two valid values for this Variable: DBEXPRESS and NONE
+#  - sga_max_size (Default 2): Size of the SGA in GB of the Oracle Database to be created.
+#    Both Parameters sga_max_size and sga_target will be set to this value for your Instance Configuration
+#  - pga_aggregate_target (Default 1): Size of the PGA in GB of the Oracle Database to be created.
+#    Will be set as Oracle Parameter pga_aggregate_target
+#  - use_large_pages (Default TRUE): Can be TRUE or ONLY. Will automatically be set to ONLY
+#    when the hugepage tag is specified
+#  - management_pack_access (Default NONE): Controls the Parameter control_management_pack_access
+#    when creating a new Database. Values can be in: "NONE", "DIAGNOSTIC" or "DIAGNOSTIC+TUNING".
+#    Be sure, that you have licenced the corrent Enterprise Option (Tuning and or Diagnostic Pack)
+#    before setting this Parameter other than NONE. In the Standard Edition 2 of Oracle,
+#    it is not possible to licence this Features, so the Variable will not have impact on this
+#    Response File Templates.
+#  - install_patch (Default NULL): The Patch ID you want to install on a new Database or an existing
+#    RDBMS / Database. Only needed when starting the playbook with the "patch" or "patchonly" TAG.
+#    Optional when starting the playbook with the "db" or "rdbms" TAG. The Value of the install_patch
+#    Variable has to be defined in the patch_dictionary.yml File under the vars folder.
+#  - install_rpm (Default NULL): The RPM Name you want to install on the Database Server.
+#    Only needed when starting the playbook with the "rpm" TAG. The Value of the install_rpm Variable
+#    has to be defined in the rpm_dictionary.yml File under the vars folder.
+#  - listener_port (Default 1521): Port on which a new listener will be created. Only needed when
+#    starting the playbook with the "db" or "listener" TAG.
+#  - listener_prefix (Default LSNR_): The Prefix with which a new listener will be created after the
+#    Database creation. The SID of the Database will always be appended to the prefix. Only needed
+#    when starting the playbook with the "db" or "listener" TAG.
+#  - emexpress (Default DBEXPRESS): Specifies if the EM Express should be installed / configured when
+#    creating a Database. There are two valid values for this Variable: DBEXPRESS and NONE
 #  - autoextend (Default false): Specifies if the created Datafiles should be autoextensible or not
-#  - listener_logging (Default OFF): Specifies if a created listener will be configured to log or not. Can be either OFF or ON.
-#  - client_install_type (Default Administrator): Choose Which Client Install Type you want to install. Can be Administrator, Runtime, InstantClient or Custom
-#  - datapump_source_host (Default NULL): The source host on which the datapump_source_sid is running. Only needed when starting the playbook with the "datapump" TAG, for doing an Datapump Export / Import a Database.
-#  - datapump_target_host (Default NULL): The target host on which the datapump_target_sid is running. Only needed when starting the playbook with the "datapump" TAG, for doing an Datapump Export / Import a Database.
-#  - datapump_source_sid (Default NULL): The source SID of the Database to Export. Only needed when starting the playbook with the "datapump" tag, for doing an Datapump Export / Import a Database.
-#  - datapump_target_sid (Default NULL): The target SID of the Database to Import to. Only needed when starting the playbook with the "datapump" tag, for doing an Datapump Export / Import a Database.
-#  - datapump_full (Default TRUE): Should a Full Export / Import be made or schema Import only? If FALSE, you need to specify the datapump_schema_list Variable
-#  - datapump_schema_list (Default NULL): List of Schemas (divided by , for example USER1,USER2). Only relevant when datapump_full is FALSE. You need to to set datapump_full to FALSE when you want to export only a certain list of Schemas.
-#  - datapump_schema_remap (Default NULL): List of Schemas to Remap. For Example "USER1:USERA,USER2:USERB" will remap USER1 to USERA and USER2 to USERB
+#  - listener_logging (Default OFF): Specifies if a created listener will be configured to log or not.
+#    Can be either OFF or ON.
+#  - client_install_type (Default Administrator): Choose Which Client Install Type you want to install.
+#    Can be Administrator, Runtime, InstantClient or Custom.
+#  - datapump_source_host (Default NULL): The source host on which the datapump_source_sid is running.
+#    Only needed when starting the playbook with the "datapump" TAG, for doing an Datapump
+#    Export / Import a Database.
+#  - datapump_target_host (Default NULL): The target host on which the datapump_target_sid is running.
+#    Only needed when starting the playbook with the "datapump" TAG, for doing an Datapump Export / Import
+#    a Database.
+#  - datapump_source_sid (Default NULL): The source SID of the Database to Export. Only needed when starting
+#    the playbook with the "datapump" TAG, for doing an Datapump Export / Import a Database.
+#  - datapump_target_sid (Default NULL): The target SID of the Database to Import to. Only needed when
+#    starting the playbook with the "datapump" TAG, for doing an Datapump Export / Import a Database.
+#  - datapump_full (Default TRUE): Should a Full Export / Import be made or schema Import only?
+#    If FALSE, you need to specify the datapump_schema_list Variable.
+#  - datapump_schema_list (Default NULL): List of Schemas (divided by , for example USER1,USER2).
+#    Only relevant when datapump_full is FALSE. You need to to set datapump_full to FALSE when you
+#    want to export only a certain list of Schemas.
+#  - datapump_schema_remap (Default NULL): List of Schemas to Remap. For Example "USER1:USERA,USER2:USERB"
+#    will remap USER1 to USERA and USER2 to USERB.
 #  - datapump_max_runtime (Default 14400): Number of Seconds of the maximum Datapump runtime.
-#  - datapump_source_user (Default system): User on Source Database which the Database Link uses to connect over Network_link
-#  - datapump_target_user (Default system): User on Target Database which impdp uses to connect
-#  - datapump_table_exists_action (Default SKIP): Controls the impdp TABLE_EXIST_ACTION. Can either be APPEND, REPLACE, [SKIP] or TRUNCATE
-#  - duplicate_source_host (Default NULL): The source host on which the duplicate_source_sid is running. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
-#  - duplicate_target_host (Default NULL): The target host on which the duplicate_target_sid is running. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
-#  - duplicate_source_sid (Default NULL): The source SID of the Database to duplicate. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
-#  - duplicate_target_sid (Default NULL): The target SID of the Database to duplicate to. Only needed when starting the playbook with the "duplicate" tag, for duplicating a Database.
-#  - duplicate_remove_target (Default False): Controls if you have acknowledged that the Target Database will be removed before starting the actual duplicate
-#  - duplicate_preserve_parameter (Default source): Controls which parameters are considered during Duplication. Can be either source or target. So either the Source DBs Parameters will be preserved or the Target DBs Parameters will be preserved
-#  - duplicate_preserve_passwords (Default true): Controls if you want to preserve the Passwords of an already existing Target Database and set them after Duplication
-#  - duplicate_preserve_pwd_user_list (Default 'SYS','SYSTEM','DBSNMP'): A List of Users (comma separated and in Quotes) of which the Passwords should be preserved
-#  - duplicate_clone_spfile (Default spfile): Will be set to preservespfile when duplicate_preserve_parameter is set to target. Must not be modified
-#  - duplicate_rate_limit_per_channel (Default 40M): Controls the RMAN RATE Limit that comes to play in a duplicate job. Each Channel will not exceed this Rate in Byte while doings a duplicate.
+#  - datapump_source_user (Default system): User on Source Database which the Database Link uses to connect
+#    over Network_link.
+#  - datapump_target_user (Default system): User on Target Database which impdp uses to connect.
+#  - datapump_table_exists_action (Default SKIP): Controls the impdp TABLE_EXIST_ACTION. Can either
+#    be APPEND, REPLACE, [SKIP] or TRUNCATE
+#  - duplicate_source_host (Default NULL): The source host on which the duplicate_source_sid is running.
+#    Only needed when starting the playbook with the "duplicate" TAG, for duplicating a Database.
+#  - duplicate_target_host (Default NULL): The target host on which the duplicate_target_sid is running.
+#    Only needed when starting the playbook with the "duplicate" TAG, for duplicating a Database.
+#  - duplicate_source_sid (Default NULL): The source SID of the Database to duplicate. Only needed when
+#    starting the playbook with the "duplicate" TAG, for duplicating a Database.
+#  - duplicate_target_sid (Default NULL): The target SID of the Database to duplicate to. Only needed
+#    when starting the playbook with the "duplicate" TAG, for duplicating a Database.
+#  - duplicate_remove_target (Default False): Controls if you have acknowledged that the Target Database
+#    will be removed before starting the actual duplicate.
+#  - duplicate_preserve_parameter (Default source): Controls which parameters are considered during Duplication.
+#    Can be either source or target. So either the Source DBs Parameters will be preserved or the Target
+#    DBs Parameters will be preserved.
+#  - duplicate_preserve_passwords (Default true): Controls if you want to preserve the Passwords of an already
+#    existing Target Database and set them after Duplication.
+#  - duplicate_preserve_pwd_user_list (Default 'SYS','SYSTEM','DBSNMP'): A List of Users (comma separated
+#    and in Quotes) of which the Passwords should be preserved.
+#  - duplicate_clone_spfile (Default spfile): Will be set to preservespfile when duplicate_preserve_parameter
+#    is set to target. Must not be modified.
+#  - duplicate_rate_limit_per_channel (Default 40M): Controls the RMAN RATE Limit that comes to play in a
+#    duplicate job. Each Channel will not exceed this Rate in Byte while doings a duplicate.
 #  - duplicate_max_runtime (Default 54000): Number of Seconds of the maximum RMAN Duplicate runtime.
-#  - duplicate_run_post_script (Default false): Controls if some SQL Script should be run in Post-processing (so after the duplicate has finished). The SQL Script should be placed under files/default/duplicate_<duplicate_source_sid>_post.sql
-#  - oracle_source_version (Default 18EE): The version of the Database to upgrade. This is needed for checking the oracle home directory.
-#  - oracle_target_version: (Default 19EE): The version the Database will be upgraded to. This is needed for checking the oracle home directory.
+#  - duplicate_run_post_script (Default false): Controls if some SQL Script should be run in Post-processing
+#    (so after the duplicate has finished). The SQL Script should be placed under
+#    files/default/duplicate_<duplicate_source_sid>_post.sql.
+#  - oracle_source_version (Default 18EE): The version of the Database to upgrade. This is needed for checking
+#    the oracle home directory.
+#  - oracle_target_version: (Default 19EE): The version the Database will be upgraded to. This is needed for
+#    checking the oracle home directory.
 #  - upgrade_log_dir: (Default /oracle/cfgtoollogs/autoupgrade/<date><time>): Creates a path for a upgrade log directory
-#  - upgrade_mode (Default: analyze): Defines the mode the autoupgrade is running at. Options: analyze / fixup / deploy
-#  - autoupgrade_jar_dir (Default: /db/oracle/19/rdbms/linux/x86_64/upgrade): Path where the up to date autoupgrade.jar is located, relative to the local_stage_directory variable. Must reside under local_stage_directory
+#  - upgrade_mode (Default: analyze): Defines the mode the autoupgrade is running at. Options: analyze / fixup / deploy.
+#  - autoupgrade_jar_dir (Default: /db/oracle/19/rdbms/linux/x86_64/upgrade): Path where the up to date autoupgrade.jar
+#    is located, relative to the local_stage_directory variable. Must reside under local_stage_directory.
 #  - create_grp (Default: no): Controls if a Restore Point is made during an Autoupgrade Process
 #  - sqlscriptoutput (Default false): Controls if the Output of a executed SQL Script will be displayed or not
 
