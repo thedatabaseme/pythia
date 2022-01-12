@@ -79,14 +79,14 @@
   become: true
   find:
     paths: "{{ rdbms[oracle_version|string].oracle_home }}"
-  register: emptyHome
+  register: empty_home
   tags:
     - rdbms
 
 - name: Oracle Home specified is not empty
   fail:
     msg: "Oracle Home {{ rdbms[oracle_version|string].oracle_home }} specified is not empty!"
-  when: emptyHome.matched > 0
+  when: empty_home.matched > 0
   tags:
     - rdbms
 

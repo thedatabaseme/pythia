@@ -364,7 +364,7 @@
     src: "roles/pythia/templates/duplicate_target_listener.ora"
     dest: "{{ duplicate_source_home.stdout }}/network/admin/listener.ora"
     mode: 0755
-    backup: yes
+    backup: true
   when: (duplicate_target_listener.stdout_lines|length == 0)
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -401,8 +401,8 @@
   blockinfile:
     dest: "{{ duplicate_source_home.stdout }}/network/admin/tnsnames.ora"
     block: "{{ lookup('template', 'roles/pythia/templates/tnsnames_duplicate_source.ora') }}"
-    backup: yes
-    create: yes
+    backup: true
+    create: true
     marker: "# Duplicate Source Database"
   when: (duplicate_target_tnsnames.stdout|length == 0)
   delegate_to: "{{ duplicate_target_host }}"
@@ -427,8 +427,8 @@
   blockinfile:
     dest: "{{ duplicate_source_home.stdout }}/network/admin/tnsnames.ora"
     block: "{{ lookup('template', 'roles/pythia/templates/tnsnames_duplicate_target.ora') }}"
-    backup: yes
-    create: yes
+    backup: true
+    create: true
     marker: "# Duplicate Target Database"
   when: (duplicate_target_tnsnames.stdout|length == 0)
   delegate_to: "{{ duplicate_target_host }}"
@@ -467,7 +467,7 @@
     src: "roles/pythia/templates/initduplicate.ora"
     dest: "{{ duplicate_source_home.stdout }}/dbs/init{{ duplicate_target_sid }}.ora"
     mode: 0755
-    backup: yes
+    backup: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   tags:
@@ -479,7 +479,7 @@
   fetch:
     src: "{{ duplicate_source_home.stdout }}/dbs/orapw{{ duplicate_source_sid }}"
     dest: "roles/pythia/files/orapw{{ duplicate_source_sid }}"
-    flat: yes
+    flat: true
   delegate_to: "{{ duplicate_source_host }}"
   run_once: true
   tags:
@@ -491,7 +491,7 @@
   copy:
     src: "roles/pythia/files/orapw{{ duplicate_source_sid }}"
     dest: "{{ duplicate_source_home.stdout }}/dbs/orapw{{ duplicate_target_sid }}"
-    remote_src: no
+    remote_src: false
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
   delegate_to: "{{ duplicate_target_host }}"
@@ -543,7 +543,7 @@
   copy:
     src: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par"
     dest: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par_backupbeforeduplicate"
-    remote_src: yes
+    remote_src: true
   delegate_to: "{{ duplicate_source_host }}"
   run_once: true
   when: (archive_parfile_status.stat.exists)
@@ -586,7 +586,7 @@
   copy:
     src: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora"
     dest: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora_backupbeforeduplicate"
-    remote_src: yes
+    remote_src: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: (spfile_exists.stat.exists)
@@ -647,7 +647,7 @@
       copy:
         src: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par_backupbeforeduplicate"
         dest: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par"
-        remote_src: yes
+        remote_src: true
       delegate_to: "{{ duplicate_source_host }}"
       run_once: true
       when: (archive_parfile_status.stat.exists)
@@ -679,7 +679,7 @@
   copy:
     src: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora_backupbeforeduplicate"
     dest: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora"
-    remote_src: yes
+    remote_src: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: (duplicate_preserve_parameter == 'target') and (spfile_exists.stat.exists)
@@ -723,7 +723,7 @@
     path: "{{ remote_sql_stage_directory }}/preserve_passwords_{{ duplicate_target_sid }}.sql"
     line: "exit;"
     state: present
-    create: yes
+    create: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: duplicate_preserve_passwords|bool
@@ -782,7 +782,7 @@
     path: "{{ remote_sql_stage_directory }}/duplicate_{{ duplicate_source_sid }}_post.sql"
     line: "exit;"
     state: present
-    create: yes
+    create: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: duplicate_run_post_script|bool
