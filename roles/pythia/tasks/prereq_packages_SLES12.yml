@@ -6,7 +6,7 @@
     name: "{{ sles12_packages }}"
     state: present
   when: (ansible_distribution == 'SLES' and ansible_distribution_major_version == '12')
-  become: yes
+  become: true
   tags:
     - rdbms
     - prepare

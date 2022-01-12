@@ -8,7 +8,7 @@
 ###################################################################################
 - name: Check if Oracle SID {{ oracle_sid }} already exists
   shell: "grep -w {{ oracle_sid }} /etc/oratab"
-  become: yes
+  become: true
   register: result
   failed_when: "'ERROR' in result.stderr"
   tags:
@@ -19,7 +19,7 @@
     that: oracle_sid not in item.stdout
     fail_msg: It seems, that there is already a database running with SID {{ oracle_sid }}
     success_msg: Oracle SID {{ oracle_sid }} not found. Proceed with Installation.
-  become: yes
+  become: true
   with_items:
     - "{{ result }}"
   tags:
@@ -47,7 +47,7 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0774
-  become: yes
+  become: true
   with_items:
     - "{{ sid_directory_list }}"
   tags:
@@ -60,7 +60,7 @@
     - hugepage
 
 - name: Setup Oracle DB Response File
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   template:
     src: roles/pythia/templates/{{ oracle_version }}_Database.rsp.j2
@@ -76,7 +76,7 @@
     - db
 
 - name: Create Database {{ oracle_sid }} with dbca
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/dbca -silent -createDatabase -templateName {{ rdbms[oracle_version|string].oracle_home }}/assistants/dbca/templates/{{ oracle_version }}_Database.rsp -sid {{ oracle_sid }} -gdbName {{ oracle_sid }} -createAsContainerDatabase {{ rdbms[oracle_version|string].container_database }} -sysPassword {{ sys_user_password }} -systemPassword {{ system_user_password }} -emConfiguration {{ emexpress }} -ignorePreReqs -honorControlFileInitParam"
   register: result
@@ -89,7 +89,7 @@
     - db
 
 - name: Create plugable Database {{ oracle_pdb_name }} with dbca
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/dbca -silent -createPluggableDatabase -pdbName {{ oracle_pdb_name }} -sourceDB {{ oracle_sid }} -configureTDE false -createPDBFrom DEFAULT -pdbAdminUserName pdmadm_{{ oracle_pdb_name }} -pdbAdminPassword {{ sys_user_password }} -pdbDatafileDestination {{ data_dest }}/{{ oracle_pdb_name }}"
   register: result
@@ -107,7 +107,7 @@
 # Tag: db
 ###################################################################################
 - name: Setting SYS and SYSTEM Password after Creation
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ item }}"
   with_items:
@@ -128,7 +128,7 @@
     - db
 
 - name: Gather Default DB Users for setting Password
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"set heading off; \\n set pages 500; \\n set feedback off; \\n select username from dba_users where username not in ('SYS', 'SYSTEM', 'ANONYMOUS');\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
   environment:
@@ -139,7 +139,7 @@
     - db
 
 - name: Setting Password for Default DB Users
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"alter user {{ item }} identified by \"{{ default_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
   environment:
@@ -166,7 +166,7 @@
 # Tag: db, listener
 ###################################################################################
 - name: Gather Listeners running on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "ps -ef | grep {{ rdbms[oracle_version|string].oracle_home }} | grep tnslsnr | grep -v grep | awk {'print$9'}"
   register: listener_list
@@ -175,7 +175,7 @@
     - listener
 
 - name: Create Listener {{ listener_prefix }}{{ oracle_sid }} on Port {{ listener_port }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   template:
     src: "roles/pythia/templates/{{ oracle_version }}_listener.ora"
@@ -188,7 +188,7 @@
     - listener
 
 - name: Create Listener {{ listener_prefix }}{{ oracle_sid }} on Port {{ listener_port }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   blockinfile:
     dest: "{{ rdbms[oracle_version|string].oracle_home }}/network/admin/listener.ora"
@@ -201,7 +201,7 @@
     - listener
 
 - name: Create tnsnames.ora
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   template:
     src: roles/pythia/templates/tnsnames.ora
@@ -214,7 +214,7 @@
     - listener
 
 - name: Create tnsnames.ora
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   blockinfile:
     dest: "{{ rdbms[oracle_version|string].oracle_home }}/network/admin/tnsnames.ora"
@@ -227,7 +227,7 @@
     - listener
 
 - name: Start Listener {{ listener_prefix }}{{ oracle_sid }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/lsnrctl start {{ listener_prefix }}{{ oracle_sid }}"
   register: result
@@ -246,7 +246,7 @@
 # Tag: listener
 ###################################################################################
 #- name: Revert Listener Configuration
-#  become: yes
+#  become: true
 #  become_user: "{{ oracle_user }}"
 #  when: result.
 #  tags:
@@ -257,6 +257,6 @@
     path: /etc/sysctl.d/97-oracle-db-sysctl.conf
     regexp: "###unstable###"
     replace: "###stable###"
-  become: yes
+  become: true
   tags:
     - db

@@ -13,7 +13,7 @@
 ###################################################################################
 - name: Check which mountpoint is used by {{ rdbms[oracle_version|string].oracle_home }}
   command: findmnt -n -o TARGET --target {{ rdbms[oracle_version|string].oracle_home }}
-  become: yes
+  become: true
   register: oracle_home_mount
   tags:
     - rdbms
@@ -28,7 +28,7 @@
     that: item.size_available > ({{ space_needed_gb }}* 1024 * 1024 * 1024)
     fail_msg: There should be at least {{ space_needed_gb }}GB of free space for installing RDBMS Software
     success_msg: There is sufficient space for installing RDBMS Software
-  become: yes
+  become: true
   when: (item.mount == oracle_home_mount.stdout) and (space_needed_gb > 0)
   with_items:
     - "{{ ansible_mounts }}"
@@ -42,7 +42,7 @@
     that: item.size_available > (rdbms[oracle_version|string].space_needed_gb * 1024 * 1024 * 1024)
     fail_msg: There should be at least {{ rdbms[oracle_version|string].space_needed_gb }}GB of free space for installing RDBMS Software
     success_msg: There is sufficient space for installing RDBMS Software
-  become: yes
+  become: true
   when: (item.mount == oracle_home_mount.stdout) and (space_needed_gb <= 0)
   with_items:
     - "{{ ansible_mounts }}"
@@ -58,7 +58,7 @@
 ###################################################################################
 - name: Check if Oracle Home specified already registered in Inventory
   shell: "grep -w {{ rdbms[oracle_version|string].oracle_home }} {{ rdbms[oracle_version|string].oracle_inventory }}/ContentsXML/inventory.xml"
-  become: yes
+  become: true
   register: result
   failed_when: "'ERROR' in result.stderr"
   tags:
@@ -69,14 +69,14 @@
     that: rdbms[oracle_version|string].oracle_home not in item.stdout
     fail_msg: "The Oracle Home {{ rdbms[oracle_version|string].oracle_home }} already registered in Inventory"
     success_msg: "Oracle Home {{ rdbms[oracle_version|string].oracle_home }} not found."
-  become: yes
+  become: true
   with_items:
     - "{{ result }}"
   tags:
     - rdbms
 
 - name: Check if Oracle Home specified is empty
-  become: yes
+  become: true
   find:
     paths: "{{ rdbms[oracle_version|string].oracle_home }}"
   register: emptyHome
@@ -103,7 +103,7 @@
     - rdbms
 
 - name: Copy Oracle Software Archive to Staging Area {{ remote_stage_directory }}
-  become: yes
+  become: true
   copy:
     src: "{{ local_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_dir }}/{{ rdbms[oracle_version|string].rdbms_file }}"
     dest: "{{ remote_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_file }}"
@@ -114,7 +114,7 @@
     - rdbms
 
 - name: Unpack Oracle Software to Oracle Home Location
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   unarchive:
     src: "{{ remote_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_file }}"
@@ -130,13 +130,13 @@
   file:
     path: "{{ remote_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_file }}"
     state: absent
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   tags:
     - rdbms
 
 - name: Setup Oracle DB Software Response File
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   template:
     src: roles/pythia/templates/{{ oracle_version }}_SoftwareOnly.rsp.j2
@@ -146,7 +146,7 @@
     - rdbms
 
 - name: Create oraInst.loc
-  become: yes
+  become: true
   template:
     src: roles/pythia/templates/oraInst.loc
     dest: /etc/oraInst.loc
@@ -164,7 +164,7 @@
 ###################################################################################
 
 - name: Install Oracle Database Software
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/runInstaller -ignorePrereq -silent -responseFile {{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp -noconfig"
   register: result
@@ -174,7 +174,7 @@
     - rdbms
 
 - name: Install Oracle Database Software on RedHat / OEL / CentOS = 8 Releases
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/runInstaller -ignorePrereq -silent -responseFile {{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp -noconfig"
   environment:
@@ -187,7 +187,7 @@
 
 - name: Execute root Skripts
   shell: "{{ item }}"
-  become: yes
+  become: true
   register: result
   with_items:
     - "/bin/sh {{ rdbms[oracle_version|string].oracle_inventory }}/orainstRoot.sh"

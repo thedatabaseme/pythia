@@ -14,7 +14,7 @@
 ###################################################################################
 
 - name: Copy RPM {{ install_rpm }} to Target Server
-  become: yes
+  become: true
   copy:
     src: "{{ local_stage_directory }}/{{ rpm[install_rpm|string].rpm_dir }}/{{ rpm[install_rpm|string].rpm_file }}"
     dest: "{{ remote_stage_directory }}/{{ rpm[install_rpm|string].rpm_file }}"
@@ -29,7 +29,7 @@
     - rpm
 
 - name: Cleanup RPM
-  become: yes
+  become: true
   file:
     path: "{{ remote_stage_directory }}/{{ rpm[install_rpm|string].rpm_file }}"
     state: absent
