@@ -93,7 +93,7 @@
     - "{{ rdbms[oracle_version|string].oracle_base }}"
     - "{{ rdbms[oracle_version|string].oracle_home }}"
     - "{{ rdbms[oracle_version|string].oracle_inventory }}"
-    - "{{ rdbms[oracle_version|string].additional_dir | default(omit)}}"
+    - "{{ rdbms[oracle_version|string].additional_dir | default(omit) }}"
   tags:
     - rdbms
 

@@ -107,7 +107,7 @@
   copy:
     src: "{{ local_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_dir }}/{{ rdbms[oracle_version|string].rdbms_file }}"
     dest: "{{ remote_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_file }}"
-    remote_src: no
+    remote_src: false
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
   tags:
@@ -119,7 +119,7 @@
   unarchive:
     src: "{{ remote_stage_directory }}/{{ rdbms[oracle_version|string].rdbms_file }}"
     dest: "{{ rdbms[oracle_version|string].oracle_home }}"
-    remote_src: yes
+    remote_src: true
     mode: 0755
     group: "{{ oracle_group }}"
     owner: "{{ oracle_user }}"
@@ -169,7 +169,7 @@
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/runInstaller -ignorePrereq -silent -responseFile {{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp -noconfig"
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
-  when: not (ansible_distribution_major_version == '8')
+  when: falset (ansible_distribution_major_version == '8')
   tags:
     - rdbms
 

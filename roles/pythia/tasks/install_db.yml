@@ -1,11 +1,13 @@
 ---
-#Oracle DB creation Task for Pythia
 
-###################################################################################
-# Before Creation of a new Database we need to check if this Database is already
-# existant.
-# Tag: db
-###################################################################################
+# Oracle DB creation Task for Pythia
+
+# ####################################################################
+# Before Creation of a new Database we need to check if this Database
+# is already # existant.
+# TAG: db
+# ####################################################################
+
 - name: Check if Oracle SID {{ oracle_sid }} already exists
   shell: "grep -w {{ oracle_sid }} /etc/oratab"
   become: true
@@ -25,11 +27,11 @@
   tags:
     - db
 
-###################################################################################
-# Start Creation of Database. We create needed Directory Structure and create
-# Response Files as configured.
-# Tag: db
-###################################################################################
+# ####################################################################
+# Start Creation of Database. We create needed Directory Structure and
+# create Response Files as configured.
+# TAG: db
+# ####################################################################
 
 - name: Print Dictionary Information for SID {{ oracle_sid }} and Version {{ oracle_version }}
   debug:
@@ -102,10 +104,11 @@
   tags:
     - db
 
-###################################################################################
+# ####################################################################
 # Reset Database Users Passwords and Print them out to the User
-# Tag: db
-###################################################################################
+# TAG: db
+# ####################################################################
+
 - name: Setting SYS and SYSTEM Password after Creation
   become: true
   become_user: "{{ oracle_user }}"
@@ -152,19 +155,20 @@
 
 - name: Print Default DB User Password
   debug:
-    msg:
-    - "All Default DB Users are created with password {{ default_user_password }}"
+    msg: "All Default DB Users are created with password {{ default_user_password }}"
   tags:
     - db
 
-###################################################################################
-# Create Listener for created Database or an additional Listener when calling
-# with the listener TAG. Before Creating a Listener, we check if there is already
-# an existing listener on this Oracle Home. If not, the listener.ora and tnsnames.ora
-# will be created completely out of the according template. If so, the Configuration
-# Files will be appended with the additional Listener Configuration.
-# Tag: db, listener
-###################################################################################
+# ####################################################################
+# Create Listener for created Database or an additional Listener when
+# calling with the listener TAG. Before Creating a Listener, we check
+# if there is already an existing listener on this Oracle Home.
+# If not, the listener.ora and tnsnames.ora will be created completely
+# out of the according template. If so, the Configuration Files will
+# be appended with the additional Listener Configuration.
+# TAG: db, listener
+# ####################################################################
+
 - name: Gather Listeners running on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
   become: true
   become_user: "{{ oracle_user }}"
@@ -181,7 +185,7 @@
     src: "roles/pythia/templates/{{ oracle_version }}_listener.ora"
     dest: "{{ rdbms[oracle_version|string].oracle_home }}/network/admin/listener.ora"
     mode: 0755
-    backup: yes
+    backup: true
   when: (listener_list.stdout_lines|length == 0)
   tags:
     - db
@@ -193,7 +197,7 @@
   blockinfile:
     dest: "{{ rdbms[oracle_version|string].oracle_home }}/network/admin/listener.ora"
     block: "{{ lookup('template', 'roles/pythia/templates/{{ oracle_version }}_listener.ora') }}"
-    backup: yes
+    backup: true
   when: (listener_list.stdout_lines|length > 0)
   register: listener_backup
   tags:
@@ -207,7 +211,7 @@
     src: roles/pythia/templates/tnsnames.ora
     dest: "{{ rdbms[oracle_version|string].oracle_home }}/network/admin/tnsnames.ora"
     mode: 0755
-    backup: yes
+    backup: true
   when: (listener_list.stdout_lines|length == 0)
   tags:
     - db
@@ -219,7 +223,7 @@
   blockinfile:
     dest: "{{ rdbms[oracle_version|string].oracle_home }}/network/admin/tnsnames.ora"
     block: "{{ lookup('template', 'roles/pythia/templates/tnsnames.ora') }}"
-    backup: yes
+    backup: true
   when: (listener_list.stdout_lines|length > 0)
   register: tnsnames_backup
   tags:
@@ -239,18 +243,19 @@
     - db
     - listener
 
-###################################################################################
-# The Revertion of the Listener and TNSNames Configuration is not possible at
-# the moment because of Ansible Bug #27626. The Backup Filenames is not registered
-# in the Variable.
-# Tag: listener
-###################################################################################
-#- name: Revert Listener Configuration
-#  become: true
-#  become_user: "{{ oracle_user }}"
-#  when: result.
-#  tags:
-#    - listener
+# ####################################################################
+# The Revertion of the Listener and TNSNames Configuration is not
+# possible at the moment because of Ansible Bug #27626. The Backup
+# Filenames is not registered in the Variable.
+# TAG: listener
+# ####################################################################
+
+# - name: Revert Listener Configuration
+#   become: true
+#   become_user: "{{ oracle_user }}"
+#   when: result.
+#   tags:
+#     - listener
 
 - name: Marking sysctl Configuration as stable
   replace:

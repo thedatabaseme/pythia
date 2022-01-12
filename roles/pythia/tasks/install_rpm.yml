@@ -1,5 +1,6 @@
 ---
-#RPM Installation Task for Pythia
+
+# RPM Installation Task for Pythia
 
 - name: Setting Ansible Remote Temporary Directory
   set_fact:
@@ -18,7 +19,7 @@
   copy:
     src: "{{ local_stage_directory }}/{{ rpm[install_rpm|string].rpm_dir }}/{{ rpm[install_rpm|string].rpm_file }}"
     dest: "{{ remote_stage_directory }}/{{ rpm[install_rpm|string].rpm_file }}"
-    remote_src: no
+    remote_src: false
     mode: 0777
   tags:
     - rpm
