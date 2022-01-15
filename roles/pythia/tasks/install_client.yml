@@ -13,6 +13,7 @@
 ###################################################################################
 - name: Check which mountpoint is used by {{ client[client_version|string].oracle_home }}
   command: findmnt -n -o TARGET --target {{ client[client_version|string].oracle_home }}
+  changed_when: false
   become: true
   register: oracle_home_mount
   tags:
@@ -58,6 +59,7 @@
 ###################################################################################
 - name: Check if Oracle Home specified already registered in Inventory
   shell: "grep -w {{ client[client_version|string].oracle_home }} {{ client[client_version|string].oracle_inventory }}/ContentsXML/inventory.xml"
+  changed_when: false
   become: true
   register: result
   failed_when: "'ERROR' in result.stderr"
@@ -110,6 +112,7 @@
     remote_src: false
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
+    mode: 0644
   tags:
     - client
 
@@ -149,6 +152,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ remote_stage_directory }}/client/runInstaller -silent -ignoreSysPrereqs -waitforcompletion -responseFile {{ remote_stage_directory }}/client/response/{{ client_version }}_Client.rsp -noconfig"
+  changed_when: true
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
   tags:
@@ -156,6 +160,7 @@
 
 - name: Execute root Skripts
   shell: "{{ item }}"
+  changed_when: true
   become: true
   register: result
   with_items:

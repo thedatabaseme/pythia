@@ -59,6 +59,7 @@
     backup: true
     create: true
     marker: "## {mark} Datapump Source Database"
+    mode: 0755
   delegate_to: "{{ datapump_target_host }}"
   run_once: true
   tags:

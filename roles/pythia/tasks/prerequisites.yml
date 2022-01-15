@@ -65,7 +65,7 @@
     - prepare
     - client
 
-- name: New oracle User Password
+- name: New oracle User Password  # noqa no-handler
   debug:
     msg: "User {{ oracle_user }} has been created with password {{ oracle_user_password }}"
   when: user_created.changed
@@ -80,7 +80,7 @@
 # TAG: rdbms
 # ####################################################################
 
-- name: Create Oracle Home Directory
+- name: Create Oracle Home Directory  # noqa empty-string-compare
   file:
     path: "{{ item }}"
     state: directory
@@ -204,6 +204,7 @@
 
 - name: Check if Transparent Hugepages are configured
   shell: grep -w transparent_hugepage=never /etc/default/grub
+  changed_when: false
   become: true
   register: transparent_hugepages
   failed_when: ("ERROR" in transparent_hugepages.stdout) or ("FATAL" in transparent_hugepages.stdout)
@@ -383,6 +384,7 @@
 - name: Make Kernel Parameters active
   command:
     cmd: sysctl --system
+  changed_when: true
   become: true
   tags:
     - rdbms

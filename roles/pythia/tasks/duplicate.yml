@@ -332,6 +332,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "ps -ef | grep {{ duplicate_source_home.stdout }} | grep tnslsnr | grep {{ listener_prefix }}{{ duplicate_source_sid }} | grep -v grep | awk {'print$9'}"
+  changed_when: false
   delegate_to: "{{ duplicate_source_host }}"
   run_once: true
   register: duplicate_source_listener
@@ -351,6 +352,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "ps -ef | grep {{ duplicate_source_home.stdout }} | grep tnslsnr | grep {{ listener_prefix }}{{ duplicate_target_sid }} | grep -v grep | awk {'print$9'}"
+  changed_when: false
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   register: duplicate_target_listener
@@ -388,6 +390,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "grep -w {{ duplicate_source_sid }} {{ duplicate_source_home.stdout }}/network/admin/tnsnames.ora"
+  changed_when: false
   failed_when: "'ERROR' in result.stderr"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -404,6 +407,7 @@
     backup: true
     create: true
     marker: "# Duplicate Source Database"
+    mode: 0755
   when: (duplicate_target_tnsnames.stdout|length == 0)
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -414,6 +418,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "grep -w {{ duplicate_target_sid }} {{ duplicate_source_home.stdout }}/network/admin/tnsnames.ora"
+  changed_when: false
   failed_when: "'ERROR' in result.stderr"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -430,6 +435,7 @@
     backup: true
     create: true
     marker: "# Duplicate Target Database"
+    mode: 0755
   when: (duplicate_target_tnsnames.stdout|length == 0)
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -440,6 +446,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ duplicate_source_home.stdout }}/bin/tnsping {{ duplicate_source_sid }}"
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_source_sid }}"
@@ -494,6 +501,7 @@
     remote_src: false
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
+    mode: 0640
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   tags:
@@ -544,6 +552,7 @@
     src: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par"
     dest: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par_backupbeforeduplicate"
     remote_src: true
+    mode: 0666
   delegate_to: "{{ duplicate_source_host }}"
   run_once: true
   when: (archive_parfile_status.stat.exists)
@@ -587,6 +596,7 @@
     src: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora"
     dest: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora_backupbeforeduplicate"
     remote_src: true
+    mode: 0640
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: (spfile_exists.stat.exists)
@@ -597,6 +607,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "echo startup nomount force pfile={{ duplicate_source_home.stdout }}/dbs/init{{ duplicate_target_sid }}.ora | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  changed_when: result.rc == 0
   register: result
   failed_when: "'ERROR' in result.stderr"
   environment:
@@ -647,6 +658,7 @@
       copy:
         src: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par_backupbeforeduplicate"
         dest: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par"
+        mode: 0666
         remote_src: true
       delegate_to: "{{ duplicate_source_host }}"
       run_once: true
@@ -679,6 +691,7 @@
   copy:
     src: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora_backupbeforeduplicate"
     dest: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora"
+    mode: 0640
     remote_src: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -724,6 +737,7 @@
     line: "exit;"
     state: present
     create: true
+    mode: 0774
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: duplicate_preserve_passwords|bool
@@ -783,6 +797,7 @@
     line: "exit;"
     state: present
     create: true
+    mode: 0774
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: duplicate_run_post_script|bool

@@ -24,6 +24,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch lsinventory"
+  changed_when: false
   register: result
   tags:
     - patch
@@ -71,6 +72,7 @@
     remote_src: false
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
+    mode: 0644
   tags:
     - patch
 
@@ -106,6 +108,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./"
+  changed_when: false
   args:
     chdir: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_id }}"
   register: result
@@ -131,6 +134,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "ps -ef | grep {{ rdbms[oracle_version|string].oracle_home }} | grep tnslsnr | grep -v grep | awk {'print$9'}"
+  changed_when: false
   register: listener_list
   tags:
     - patch
@@ -197,6 +201,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch apply -silent -oh {{ rdbms[oracle_version|string].oracle_home }}"
+  changed_when: true
   environment:
     ORACLE_BASE: "{{ rdbms[oracle_version|string].oracle_base }}"
   args:
@@ -297,6 +302,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch util Cleanup -silent -oh {{ rdbms[oracle_version|string].oracle_home }}"
+  changed_when: true
   tags:
     - cleanup
 
@@ -304,6 +310,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "rm -rf {{ rdbms[oracle_version|string].oracle_home }}/.patch_storage/{{ patch[install_patch|int].patch_id }}*"
+  changed_when: true
   args:
     warn: false
   tags:

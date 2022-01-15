@@ -10,6 +10,7 @@
 
 - name: Check if Oracle SID {{ oracle_sid }} already exists
   shell: "grep -w {{ oracle_sid }} /etc/oratab"
+  changed_when: false
   become: true
   register: result
   failed_when: "'ERROR' in result.stderr"
@@ -81,6 +82,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/dbca -silent -createDatabase -templateName {{ rdbms[oracle_version|string].oracle_home }}/assistants/dbca/templates/{{ oracle_version }}_Database.rsp -sid {{ oracle_sid }} -gdbName {{ oracle_sid }} -createAsContainerDatabase {{ rdbms[oracle_version|string].container_database }} -sysPassword {{ sys_user_password }} -systemPassword {{ system_user_password }} -emConfiguration {{ emexpress }} -ignorePreReqs -honorControlFileInitParam"
+  changed_when: true
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
   environment:
@@ -113,6 +115,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ item }}"
+  changed_when: true
   with_items:
     - "echo -e \"alter user system identified by \"{{ system_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
     - "echo -e \"alter user system identified by \"{{ sys_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
@@ -125,8 +128,8 @@
 - name: Print SYS and SYSTEM Users Password
   debug:
     msg:
-    - "User SYS has been created with password {{ sys_user_password }}"
-    - "User SYSTEM has been created with password {{ system_user_password }}"
+      - "User SYS has been created with password {{ sys_user_password }}"
+      - "User SYSTEM has been created with password {{ system_user_password }}"
   tags:
     - db
 
@@ -134,6 +137,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"set heading off; \\n set pages 500; \\n set feedback off; \\n select username from dba_users where username not in ('SYS', 'SYSTEM', 'ANONYMOUS');\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
     ORACLE_SID: "{{ oracle_sid }}"
@@ -173,6 +177,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "ps -ef | grep {{ rdbms[oracle_version|string].oracle_home }} | grep tnslsnr | grep -v grep | awk {'print$9'}"
+  changed_when: false
   register: listener_list
   tags:
     - db
@@ -191,7 +196,7 @@
     - db
     - listener
 
-- name: Create Listener {{ listener_prefix }}{{ oracle_sid }} on Port {{ listener_port }}
+- name: Create Listener {{ listener_prefix }}{{ oracle_sid }} on Port {{ listener_port }}  # noqa no-jinja-nesting
   become: true
   become_user: "{{ oracle_user }}"
   blockinfile:
@@ -234,6 +239,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/lsnrctl start {{ listener_prefix }}{{ oracle_sid }}"
+  changed_when: result.rc == 0
   register: result
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"

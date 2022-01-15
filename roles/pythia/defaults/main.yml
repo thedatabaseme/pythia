@@ -147,7 +147,7 @@ oracle_target_version: 19EE
 upgrade_log_dir: "/oracle/cfgtoollogs/autoupgrade/{{ ansible_date_time.date }}_{{ ansible_date_time.time }}"
 upgrade_mode: analyze
 autoupgrade_jar_dir: /db/oracle/19/rdbms/linux/x86_64/upgrade
-create_grp: no
+create_grp: no  # noqa truthy
 
 # Control Variables for Datapump
 datapump_source_host: ""

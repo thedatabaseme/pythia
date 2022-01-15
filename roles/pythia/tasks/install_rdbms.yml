@@ -11,8 +11,10 @@
 # Check which Mountpoint is used for the specified Oracle Home
 # Tag: rdbms
 ###################################################################################
+
 - name: Check which mountpoint is used by {{ rdbms[oracle_version|string].oracle_home }}
   command: findmnt -n -o TARGET --target {{ rdbms[oracle_version|string].oracle_home }}
+  changed_when: false
   become: true
   register: oracle_home_mount
   tags:
@@ -56,8 +58,10 @@
 # Oracle Inventory and if the specified Oracle Home is empty or not.
 # Tag: rdbms
 ###################################################################################
+
 - name: Check if Oracle Home specified already registered in Inventory
   shell: "grep -w {{ rdbms[oracle_version|string].oracle_home }} {{ rdbms[oracle_version|string].oracle_inventory }}/ContentsXML/inventory.xml"
+  changed_when: false
   become: true
   register: result
   failed_when: "'ERROR' in result.stderr"
@@ -110,6 +114,7 @@
     remote_src: false
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
+    mode: 0644
   tags:
     - rdbms
 
@@ -187,6 +192,7 @@
 
 - name: Execute root Skripts
   shell: "{{ item }}"
+  changed_when: result.rc == 0
   become: true
   register: result
   with_items:
