@@ -81,7 +81,7 @@
 - name: Create Database {{ oracle_sid }} with dbca
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/dbca -silent -createDatabase -templateName {{ rdbms[oracle_version|string].oracle_home }}/assistants/dbca/templates/{{ oracle_version }}_Database.rsp -sid {{ oracle_sid }} -gdbName {{ oracle_sid }} -createAsContainerDatabase {{ rdbms[oracle_version|string].container_database }} -sysPassword {{ sys_user_password }} -systemPassword {{ system_user_password }} -emConfiguration {{ emexpress }} -ignorePreReqs -honorControlFileInitParam"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/dbca -silent -createDatabase -templateName {{ rdbms[oracle_version|string].oracle_home }}/assistants/dbca/templates/{{ oracle_version }}_Database.rsp -sid {{ oracle_sid }} -gdbName {{ oracle_sid }} -createAsContainerDatabase {{ rdbms[oracle_version|string].container_database }} -sysPassword {{ sys_user_password }} -systemPassword {{ system_user_password }} -emConfiguration {{ emexpress }} -ignorePreReqs -honorControlFileInitParam"  # noqa line-length
   changed_when: true
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
@@ -95,7 +95,7 @@
 - name: Create plugable Database {{ oracle_pdb_name }} with dbca
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/dbca -silent -createPluggableDatabase -pdbName {{ oracle_pdb_name }} -sourceDB {{ oracle_sid }} -configureTDE false -createPDBFrom DEFAULT -pdbAdminUserName pdmadm_{{ oracle_pdb_name }} -pdbAdminPassword {{ sys_user_password }} -pdbDatafileDestination {{ data_dest }}/{{ oracle_pdb_name }}"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/dbca -silent -createPluggableDatabase -pdbName {{ oracle_pdb_name }} -sourceDB {{ oracle_sid }} -configureTDE false -createPDBFrom DEFAULT -pdbAdminUserName pdmadm_{{ oracle_pdb_name }} -pdbAdminPassword {{ sys_user_password }} -pdbDatafileDestination {{ data_dest }}/{{ oracle_pdb_name }}"  # noqa line-length
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
   when: (rdbms[oracle_version|string].container_database|bool) and (oracle_pdb_name|length > 0)
@@ -136,7 +136,7 @@
 - name: Gather Default DB Users for setting Password
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set pages 500; \\n set feedback off; \\n select username from dba_users where username not in ('SYS', 'SYSTEM', 'ANONYMOUS');\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"set heading off; \\n set pages 500; \\n set feedback off; \\n select username from dba_users where username not in ('SYS', 'SYSTEM', 'ANONYMOUS');\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"  # noqa line-length
   changed_when: false
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
@@ -148,7 +148,7 @@
 - name: Setting Password for Default DB Users
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"alter user {{ item }} identified by \"{{ default_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"alter user {{ item }} identified by \"{{ default_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"  # noqa line-length
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
     ORACLE_SID: "{{ oracle_sid }}"

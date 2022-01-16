@@ -257,7 +257,7 @@
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
     ORACLE_SID: "{{ item }}"
-  when: (sid_list.stdout_lines|length > 0) and (patch[install_patch|int].patch_all_pdbs is defined) and (patch[install_patch|int].patch_all_pdbs|bool) and (rdbms[oracle_version|string].container_database|bool)
+  when: (sid_list.stdout_lines|length > 0) and (patch[install_patch|int].patch_all_pdbs is defined) and (patch[install_patch|int].patch_all_pdbs|bool) and (rdbms[oracle_version|string].container_database|bool)  # noqa line-length
   with_items: "{{ sid_list.stdout_lines }}"
   tags:
     - patch

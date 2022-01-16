@@ -171,7 +171,7 @@
 - name: Install Oracle Database Software
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "{{ rdbms[oracle_version|string].oracle_home }}/runInstaller -ignorePrereq -silent -responseFile {{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp -noconfig"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/runInstaller -ignorePrereq -silent -responseFile {{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp -noconfig"  # noqa line-length
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
   when: not (ansible_distribution_major_version == '8')
@@ -181,12 +181,12 @@
 - name: Install Oracle Database Software on RedHat / OEL / CentOS = 8 Releases
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "{{ rdbms[oracle_version|string].oracle_home }}/runInstaller -ignorePrereq -silent -responseFile {{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp -noconfig"
+  shell: "{{ rdbms[oracle_version|string].oracle_home }}/runInstaller -ignorePrereq -silent -responseFile {{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp -noconfig"  # noqa line-length
   environment:
     CV_ASSUME_DISTID: "OEL7.8"
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
-  when: ((ansible_distribution == 'CentOS') or (ansible_distribution == 'RedHat') or (ansible_distribution == 'OracleLinux')) and (ansible_distribution_major_version == '8')
+  when: ((ansible_distribution == 'CentOS') or (ansible_distribution == 'RedHat') or (ansible_distribution == 'OracleLinux')) and (ansible_distribution_major_version == '8')  # noqa line-length
   tags:
     - rdbms
 

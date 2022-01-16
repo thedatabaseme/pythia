@@ -151,7 +151,7 @@
 - name: Install Oracle Client Software
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "{{ remote_stage_directory }}/client/runInstaller -silent -ignoreSysPrereqs -waitforcompletion -responseFile {{ remote_stage_directory }}/client/response/{{ client_version }}_Client.rsp -noconfig"
+  shell: "{{ remote_stage_directory }}/client/runInstaller -silent -ignoreSysPrereqs -waitforcompletion -responseFile {{ remote_stage_directory }}/client/response/{{ client_version }}_Client.rsp -noconfig"  # noqa line-length
   changed_when: true
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
