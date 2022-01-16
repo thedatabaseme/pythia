@@ -174,7 +174,7 @@
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/runInstaller -ignorePrereq -silent -responseFile {{ rdbms[oracle_version|string].oracle_home }}/inventory/response/{{ oracle_version }}_SoftwareOnly.rsp -noconfig"
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
-  when: falset (ansible_distribution_major_version == '8')
+  when: not (ansible_distribution_major_version == '8')
   tags:
     - rdbms
 
