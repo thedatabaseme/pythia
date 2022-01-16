@@ -1,17 +1,18 @@
-####################################################################################################################
-# Patch Dictionary for Pythia
-# rdbms_dir: Path where the RDBMS is located on the Stage Directory, relative to the local_stage_directory Variable
-# rdbms_file: Filename of the RDBMS Archive
-# oracle_base: Oracle Base Directory for the specified RDBMS
-# oracle_home: Oracle Home Directory for the specified RDBMS
-# oracle_inventory: Path to the Oracle Inventory Location
-# container_database: Controls, if a database created for the specified release, should be a CDB or not. NON-CDB are
-#                     desupported starting with 21c
-# additional_dir: You may specify an additional directory that should be created / permission set when install RDBMS
-# space_needed_gb: Space approximately in GB for installing the RDBMS. Respects, 
-#                  that there is probably a Patch installed on top
-# desc: Description of the RDBMS
-####################################################################################################################
+---
+
+# - rdbms_dir: Path where the RDBMS is located on the Stage Directory, relative to the
+#   local_stage_directory Variable
+# - rdbms_file: Filename of the RDBMS Archive
+# - oracle_base: Oracle Base Directory for the specified RDBMS
+# - oracle_home: Oracle Home Directory for the specified RDBMS
+# - oracle_inventory: Path to the Oracle Inventory Location
+# - container_database: Controls, if a database created for the specified release,
+#   should be a CDB or not. NON-CDB are desupported starting with 21c
+# - additional_dir: You may specify an additional directory that should be created
+#   / permission set when install RDBMS
+# - space_needed_gb: Space approximately in GB for installing the RDBMS. Respects,
+#   that there is probably a Patch installed on top
+# - desc: Description of the RDBMS
 
 rdbms:
   21EE:

@@ -32,7 +32,7 @@ You can adapt Pythia to your needs by configure variables when running the Playb
 Requirements
 ------------
 
-Pythia requires you to run Ansible 2.7 or higher. The Oracle Software you want to install / configure by Pythia has to be located on a "Staging Area" mounted on the Control Server. Keep in Mind, that you need to licence Oracle Software separately!
+Pythia requires you to run Ansible 2.9 or higher. The Oracle Software you want to install / configure by Pythia has to be located on a "Staging Area" mounted on the Control Server. Keep in Mind, that you need to licence Oracle Software separately!
 
 Installation and Configuration
 ------------------------------

@@ -1,5 +1,6 @@
 ---
-#Oracle Patching Task for Pythia
+
+# Oracle Patching Task for Pythia
 
 - name: Setting Ansible Remote Temporary Directory
   set_fact:
@@ -20,9 +21,10 @@
 ###################################################################################
 
 - name: Check if Patch {{ install_patch }} already installed on RDBMS
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch lsinventory"
+  changed_when: false
   register: result
   tags:
     - patch
@@ -43,12 +45,12 @@
 ###################################################################################
 
 - name: Deploy needed OPATCH Version
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   unarchive:
     src: "{{ local_stage_directory }}/{{ patch[install_patch|int].opatch_dir }}/{{ patch[install_patch|int].opatch_file }}"
     dest: "{{ rdbms[oracle_version|string].oracle_home }}"
-    remote_src: no
+    remote_src: false
     mode: 0755
     group: "{{ oracle_group }}"
     owner: "{{ oracle_user }}"
@@ -62,24 +64,25 @@
 ###################################################################################
 
 - name: Copy Oracle Patch Archive to Staging Area {{ remote_stage_directory }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   copy:
     src: "{{ local_stage_directory }}/{{ patch[install_patch|int].patch_dir }}/{{ patch[install_patch|int].patch_file }}"
     dest: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_file }}"
-    remote_src: no
+    remote_src: false
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
+    mode: 0644
   tags:
     - patch
 
 - name: Unzip Patch in Remote Stage Directory
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   unarchive:
-    src: "{{remote_stage_directory }}/{{ patch[install_patch|int].patch_file }}"
+    src: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_file }}"
     dest: "{{ remote_stage_directory }}"
-    remote_src: yes
+    remote_src: true
     mode: 0755
     group: "{{ oracle_group }}"
     owner: "{{ oracle_user }}"
@@ -90,7 +93,7 @@
   file:
     path: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_file }}"
     state: absent
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   tags:
     - patch
@@ -102,9 +105,10 @@
 ###################################################################################
 
 - name: Check if Patch is compatible with installed RDBMS
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./"
+  changed_when: false
   args:
     chdir: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_id }}"
   register: result
@@ -127,16 +131,17 @@
 ###################################################################################
 
 - name: Gather Listeners running on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "ps -ef | grep {{ rdbms[oracle_version|string].oracle_home }} | grep tnslsnr | grep -v grep | awk {'print$9'}"
+  changed_when: false
   register: listener_list
   tags:
     - patch
     - patchonly
 
 - name: Gather Databases running on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "cat /etc/oratab | grep {{ rdbms[oracle_version|string].oracle_home }} | awk -F \":\" {'print$1'}"
   args:
@@ -163,7 +168,7 @@
     - patchonly
 
 - name: Stopping all Listeners on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/lsnrctl stop {{ item }}"
   environment:
@@ -172,10 +177,10 @@
   with_items: "{{ listener_list.stdout_lines }}"
   tags:
     - patch
-    - patchonly 
+    - patchonly
 
 - name: Stopping all Databases on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "echo shutdown immediate | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
   environment:
@@ -193,9 +198,10 @@
 ###################################################################################
 
 - name: Apply Patch {{ install_patch }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch apply -silent -oh {{ rdbms[oracle_version|string].oracle_home }}"
+  changed_when: true
   environment:
     ORACLE_BASE: "{{ rdbms[oracle_version|string].oracle_base }}"
   args:
@@ -220,7 +226,7 @@
 ###################################################################################
 
 - name: Start Listeners
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/bin/lsnrctl start {{ item }}"
   environment:
@@ -232,7 +238,7 @@
     - patchonly
 
 - name: Start Databases
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "echo startup | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
   environment:
@@ -245,13 +251,13 @@
     - patchonly
 
 - name: Start all PDBs for patching
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"alter pluggable database all open;\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
     ORACLE_SID: "{{ item }}"
-  when: (sid_list.stdout_lines|length > 0) and (patch[install_patch|int].patch_all_pdbs is defined) and (patch[install_patch|int].patch_all_pdbs|bool) and (rdbms[oracle_version|string].container_database|bool)
+  when: (sid_list.stdout_lines|length > 0) and (patch[install_patch|int].patch_all_pdbs is defined) and (patch[install_patch|int].patch_all_pdbs|bool) and (rdbms[oracle_version|string].container_database|bool)  # noqa line-length
   with_items: "{{ sid_list.stdout_lines }}"
   tags:
     - patch
@@ -263,7 +269,7 @@
 ###################################################################################
 
 - name: Running Datapatch
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/datapatch -verbose"
   environment:
@@ -283,7 +289,7 @@
 ###################################################################################
 
 - name: Cleanup Remote Staging Area
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   file:
     path: "{{ remote_stage_directory }}/{{ patch[install_patch|int].patch_id }}"
@@ -293,17 +299,19 @@
     - patch
 
 - name: Cleanup OPatch Backups 1/2
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ rdbms[oracle_version|string].oracle_home }}/OPatch/opatch util Cleanup -silent -oh {{ rdbms[oracle_version|string].oracle_home }}"
+  changed_when: true
   tags:
     - cleanup
 
 - name: Cleanup OPatch Backups 2/2
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "rm -rf {{ rdbms[oracle_version|string].oracle_home }}/.patch_storage/{{ patch[install_patch|int].patch_id }}*"
+  changed_when: true
   args:
-    warn: no
+    warn: false
   tags:
     - cleanup

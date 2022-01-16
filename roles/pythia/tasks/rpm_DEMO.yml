@@ -1,7 +1,7 @@
 ---
 
 - name: Install RPM {{ install_rpm }}
-  become: yes
+  become: true
   package:
     name: "{{ remote_stage_directory }}/{{ rpm[install_rpm|string].rpm_file }}"
     state: present

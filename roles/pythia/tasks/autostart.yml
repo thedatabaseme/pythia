@@ -7,7 +7,7 @@
 ###################################################################################
 
 - name: Check which Oracle Home is used by {{ oracle_sid }}
-  become: yes
+  become: true
   shell: "cat /etc/oratab | grep -w {{ oracle_sid }} | awk -F \":\" {'print$2'}"
   args:
     removes: /etc/oratab
@@ -34,7 +34,7 @@
 ###################################################################################
 
 - name: Check if Autostart for DB {{ oracle_sid }} is already set
-  become: yes
+  become: true
   shell: "cat /etc/oratab | grep -w {{ oracle_sid }} | awk -F \":\" {'print$3'}"
   args:
     removes: /etc/oratab
@@ -47,7 +47,7 @@
     that: autostart_set.stdout == "N"
     fail_msg: Autostart is already set for DB {{ oracle_sid }}
     success_msg: Autostart for Oracle DB {{ oracle_sid }} will be configured.
-  become: yes
+  become: true
   tags:
     - autostart
 
@@ -63,8 +63,8 @@
     owner: root
     group: root
     mode: 0644
-    force: no
-  become: yes
+    force: false
+  become: true
   tags:
     - autostart
 
@@ -75,8 +75,8 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0750
-    force: yes
-  become: yes
+    force: true
+  become: true
   become_user: "{{ oracle_user }}"
   tags:
     - autostart
@@ -88,8 +88,8 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0750
-    force: yes
-  become: yes
+    force: true
+  become: true
   become_user: "{{ oracle_user }}"
   tags:
     - autostart
@@ -104,7 +104,7 @@
     path: /etc/oratab
     regexp: "{{ oracle_sid }}:{{ oracle_home }}:N"
     replace: "{{ oracle_sid }}:{{ oracle_home }}:Y"
-  become: yes
+  become: true
   tags:
     - autostart
 
@@ -114,10 +114,10 @@
 ###################################################################################
 
 - name: Reload Systemd Config
-  become: yes
+  become: true
   systemd:
-    daemon_reload: yes
-    enabled: yes
+    daemon_reload: true
+    enabled: true
     name: "dbora{{ oracle_sid }}"
   tags:
     - autostart
