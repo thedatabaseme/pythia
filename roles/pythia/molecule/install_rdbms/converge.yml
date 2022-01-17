@@ -1,0 +1,40 @@
+---
+- name: Converge
+  hosts: all
+
+  vars:
+    oracle_version: 21EE
+    oracle_sid: ORA21
+    sga_max_size: 2
+    runinstaller_parameters: " -ignoreInternalDriverError"
+
+  roles:
+   - pythia
+
+#  tags: rdbms
+  
+#  roles:
+#    - role: pythia
+#      vars:
+#        oracle_version: 21EE
+#        oracle_sid: ORA21
+#        sga_max_size: 2
+#      tags:
+#        - rdbms
+      
+
+#  tasks:
+#    - name: "Including Pythia for RDBMS Molecule test"
+#      import_role:
+#        name: "pythia"
+#      tags:
+#        - rdbms
+
+#    - name: Apply tags to tasks within included file
+#      include_role:
+#        name: pythia
+#        apply:
+#          tags:
+#            - rdbms
+#      tags:
+#        - always

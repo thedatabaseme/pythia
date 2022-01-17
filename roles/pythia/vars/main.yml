@@ -100,6 +100,7 @@ sles15_packages:
   - xz
   - psmisc
   - acl
+  - unzip
 
 sles12_packages:
   - bc
@@ -141,6 +142,7 @@ sles12_packages:
   - xz
   - psmisc
   - acl
+  - unzip
 
 rhel7_packages:
   - bc
@@ -174,6 +176,7 @@ rhel7_packages:
   - targetcli
   - psmisc
   - acl
+  - unzip
 
 rhel8_packages:
   - bc
@@ -203,3 +206,4 @@ rhel8_packages:
   - sysstat
   - psmisc
   - acl
+  - unzip

@@ -297,7 +297,7 @@
 
 - name: Setup Kernel Parameters
   template:
-    src: roles/pythia/templates/97-oracle-db-sysctl.conf
+    src: "{{ role_path }}/templates/97-oracle-db-sysctl.conf"
     dest: /etc/sysctl.d/97-oracle-db-sysctl.conf
     owner: root
     group: root
@@ -313,7 +313,7 @@
 
 - name: Setup Kernel Parameters
   template:
-    src: roles/pythia/templates/97-oracle-db-sysctl.conf
+    src: "{{ role_path }}/templates/97-oracle-db-sysctl.conf"
     dest: /etc/sysctl.d/97-oracle-db-sysctl.conf
     owner: root
     group: root
@@ -394,7 +394,7 @@
 
 - name: Setting Security Limits
   template:
-    src: roles/pythia/templates/97-oracle-db-limits.conf
+    src: "{{ role_path }}/templates/97-oracle-db-limits.conf"
     dest: "/etc/security/limits.d/97-oracle-db-limits.conf"
     owner: root
     group: root
@@ -472,7 +472,7 @@
 - name: Setup Environment Skript for {{ oracle_user }} OS User (1/3)
   become: true
   template:
-    src: roles/pythia/templates/ora_set.sh
+    src: "{{ role_path }}/templates/ora_set.sh"
     dest: "{{ oracle_home_dir }}/ora_set.sh"
     mode: 0750
     owner: "{{ oracle_user }}"
