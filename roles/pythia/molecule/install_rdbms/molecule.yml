@@ -26,7 +26,7 @@ verifier:
 scenario:
   test_sequence:
     - destroy
-    - dependency
+#    - dependency
     - syntax
     - create
     - prepare
