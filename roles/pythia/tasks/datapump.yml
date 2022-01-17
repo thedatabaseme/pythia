@@ -83,7 +83,7 @@
 - name: Create Database Link to Source Database {{ datapump_source_sid }}
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n create public database link pythia_dp_{{ datapump_source_sid }} connect to {{ datapump_source_user }} identified by \"{{ lookup('vars', 'vault_datapump_' + datapump_source_sid) }}\" using 'PYTHIA_DP_{{ datapump_source_sid }}';\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"set heading off; \\n create public database link pythia_dp_{{ datapump_source_sid }} connect to {{ datapump_source_user }} identified by \"{{ lookup('vars', 'vault_datapump_' + datapump_source_sid) }}\" using 'PYTHIA_DP_{{ datapump_source_sid }}';\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
   changed_when: true
   environment:
     ORACLE_HOME: "{{ datapump_target_home.stdout }}"
