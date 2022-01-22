@@ -1,5 +1,11 @@
 Changelog of Pythia:
 
+Version 2.2.5
+  - New Feature #19: Automatic linting is now done using Github Actions. Fixed many (really many) linting errors and refactored lots of code
+  - New Feature #20: Added Molecule test scenarios in Pythia
+  - New Feature #21: You can now specify additional runInstaller parameters by using the runinstaller_parameters variable
+  - Fixed #23: Pythia now uses dynamic generated variable role_path when working with templates and files.
+
 Version 2.2.0
   - New Feature #17: Pythia now supports Oracle Database 21c as well as Multitenant / Container Databases
     
