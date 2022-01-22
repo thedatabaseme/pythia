@@ -1,5 +1,6 @@
 - hosts: "{{ HOSTS | default('all') }}"
+  become: true
   become_user: root
-  
+
   roles:
    - roles/pythia

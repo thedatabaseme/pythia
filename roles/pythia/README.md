@@ -31,7 +31,7 @@ You can adapt Pythia to your needs by configure variables when running the Playb
 Requirements
 ------------
 
-Pythia requires you to run Ansible 2.7 or higher. The Oracle Software you want to install / configure by Pythia has to be located on a "Staging Area" mounted on the Control Server. Keep in Mind, that you need to licence Oracle Software separately!
+Pythia requires you to run Ansible 2.9 or higher. The Oracle Software you want to install / configure by Pythia has to be located on a "Staging Area" mounted on the Control Server. Keep in Mind, that you need to licence Oracle Software separately!
 
 Role Variables
 --------------
@@ -44,11 +44,12 @@ main.yml Variables (can be set when calling the playbook, see Examples):
   - oracle_home_dir (Default /home/{{ oracle_user }}: Home Directory of the Oracle OS User
   - local_stage_directory (Default /mnt/oracle_stage): Software Stage Directory on the Ansible Control Server
   - remote_stage_directory (Default /oracle/sources): Software Stage Directory on the Target Server. E.G. Patches are staged here before applying it to a RDBMS or Database
-  - local_sql_stage_directory (Default roles/pythia/files/default): Stage Directory for SQL Scripts on Ansible Control Server.
+  - local_sql_stage_directory (Default {{ role_path }}/files/default): Stage Directory for SQL Scripts on Ansible Control Server.
   - remote_sql_stage_directory (Default {{ remote_stage_directory }}/scripts): Stage Directory for SQL Scripts on Target Server.
   - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy or change. The Version String has to be existant within the RDBMS Dictionary (rdbms_dict.yml under vars folder)
   - client_version (Default 19CLNT): The Version of the Oracle Client you want to deploy. The Version String has to be existant within the Client Dictionary (client_dict.yml under vars folder)
   - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only needed when starting the playbook with the "db" tag, for creating a Database.
+  - runinstaller_parameters (Default NULL): Additional runinstaller parameters during installation of Oracle software. For example "-ignoreInternalDriverError"
   - oracle_pdb_name (Default NULL): Name of the Plugable Database you want to get created during Database creation. Needs to be set in order to get it created.
   - space_needed_gb: Space approximately in GB for installing the RDBMS. Respects, that there is probably a Patch installed on top. OVERLOADS rdbms_dict.yml space_needed_gb. SHOULD NOT BE SPECIFIED WITHIN HERE. SHOULD BE SPECIFIED AS EXTRA VARIABLE IN PLAYBOOK CALL.
   - nls_length_semantics (Default BYTE): Oracle Parameter NLS_LENGTH_SEMANTICS, can be BYTE or CHAR. When set, it will be placed in the Database creation Response Files

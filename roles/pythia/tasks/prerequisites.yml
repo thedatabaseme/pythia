@@ -1,16 +1,16 @@
 ---
 
-###################################################################################
+# ####################################################################
 # Creates the in vars/main.yml defined oracle group if not existing.
-# Tag: rdbms, prepare
-###################################################################################
+# TAG: rdbms, prepare
+# ####################################################################
 
 - name: Check if dba Group exsists
-  become: yes
+  become: true
   getent:
     database: group
     key: "{{ oracle_group }}"
-    fail_key: no
+    fail_key: false
   register: group_exists
   tags:
     - rdbms
@@ -22,26 +22,26 @@
     name: "{{ oracle_group }}"
     gid: "{{ oracle_gid }}"
     state: present
-  become: yes
+  become: true
   when: group_exists.msg is defined
   tags:
     - rdbms
     - prepare
     - client
 
-###################################################################################
-# Creates the in vars/main.yml defined oracle user if not existing. Sets User
-# password and shows a message if the password has been set. The password is only
-# set when the user is not existent.
-# Tag: rdbms, prepare, client
-###################################################################################
+# ####################################################################
+# Creates the in vars/main.yml defined oracle user if not existing.
+# Sets User password and shows a message if the password has been set.
+# The password is only set when the user is not existent.
+# TAG: rdbms, prepare, client
+# ####################################################################
 
 - name: Check if {{ oracle_user }} User exsists
-  become: yes
+  become: true
   getent:
     database: passwd
     key: "{{ oracle_user }}"
-    fail_key: no
+    fail_key: false
   register: user_exists
   tags:
     - rdbms
@@ -56,17 +56,16 @@
     uid: "{{ oracle_uid }}"
     group: "{{ oracle_group }}"
     password: "{{ oracle_user_password | password_hash('sha512') }}"
-    create_home: yes
     update_password: on_create
   register: user_created
-  become: yes
+  become: true
   when: user_exists.msg is defined
   tags:
     - rdbms
     - prepare
     - client
 
-- name: New oracle User Password
+- name: New oracle User Password  # noqa no-handler
   debug:
     msg: "User {{ oracle_user }} has been created with password {{ oracle_user_password }}"
   when: user_created.changed
@@ -75,34 +74,34 @@
     - prepare
     - client
 
-###################################################################################
+# ####################################################################
 # Creates needed Directories for Oracle Installation (RDBMS).
 # Includes oracle_base, oracle_home, oracle_inventory
-# Tag: rdbms
-###################################################################################
+# TAG: rdbms
+# ####################################################################
 
-- name: Create Oracle Home Directory
+- name: Create Oracle Home Directory  # noqa empty-string-compare
   file:
     path: "{{ item }}"
     state: directory
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0755
-  become: yes
+  become: true
   when: 'item != ""'
   with_items:
     - "{{ rdbms[oracle_version|string].oracle_base }}"
     - "{{ rdbms[oracle_version|string].oracle_home }}"
     - "{{ rdbms[oracle_version|string].oracle_inventory }}"
-    - "{{ rdbms[oracle_version|string].additional_dir | default(omit)}}"
+    - "{{ rdbms[oracle_version|string].additional_dir | default(omit) }}"
   tags:
     - rdbms
 
-###################################################################################
+# ####################################################################
 # Creates needed Directories for Oracle Installation (Client).
 # Includes oracle_base, oracle_home, oracle_inventory
-# Tag: client
-###################################################################################
+# TAG: client
+# ####################################################################
 
 - name: Create Oracle Home Directory
   file:
@@ -111,7 +110,7 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0755
-  become: yes
+  become: true
   with_items:
     - "{{ client[client_version|string].oracle_base }}"
     - "{{ client[client_version|string].oracle_home }}"
@@ -119,10 +118,11 @@
   tags:
     - client
 
-###################################################################################
+# ####################################################################
 # Creates needed Directories for Staging Patches, RDBMS and Scripts.
-# Tag: rdbms, db, sqlscript, patch, patchonly, rpm, client
-###################################################################################
+# TAG: rdbms, db, sqlscript, patch, patchonly, rpm, client
+# ####################################################################
+
 - name: Create Oracle Stage Directory
   file:
     path: "{{ item }}"
@@ -130,7 +130,7 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0777
-  become: yes
+  become: true
   with_items:
     - "{{ remote_stage_directory }}"
     - "{{ remote_sql_stage_directory }}"
@@ -143,11 +143,11 @@
     - client
     - duplicate
 
-###################################################################################
-# Installing all Prerequired OS Packages for the Oracle Installation. Dependant
-# on the OS Version and Distribution in separated yml files.
-# Tag: rdbms
-###################################################################################
+# ####################################################################
+# Installing all Prerequired OS Packages for the Oracle Installation.
+# Dependant on the OS Version and Distribution in separated yml files.
+# TAG: rdbms
+# ####################################################################
 
 - name: Install prerequisite Packages for Oracle Database
   include_tasks: prereq_packages_{{ ansible_distribution }}{{ ansible_distribution_major_version }}.yml
@@ -156,12 +156,13 @@
     - prepare
     - client
 
-###################################################################################
-# Setup Required Kernel / OS Parameters, such as sysctl and limits. Calculates
-# Shared Memory and Hugepages, implement the calculated values. Also Transparent
-# Hugepages are disabled when used on the Target Server.
-# Tag: rdbms, db, hugepage, converttohugepage, prepare
-###################################################################################
+# ####################################################################
+# Setup Required Kernel / OS Parameters, such as sysctl and limits.
+# Calculates Shared Memory and Hugepages, implement the calculated
+# values. Also Transparent Hugepages are disabled when used on the
+# target server.
+# TAG: rdbms, db, hugepage, converttohugepage, prepare
+# ####################################################################
 
 - name: Check if sysctl Configuration exists
   stat:
@@ -179,9 +180,9 @@
     name: /etc/sysctl.d/97-oracle-db-sysctl.conf
     line: "###stable###"
     state: present
-  become: yes
+  become: true
   register: sysctl_status
-  check_mode: yes
+  check_mode: true
   when: (sysctl_exists.stat.exists | bool) and (sysctl_exists.stat.exists is defined)
   tags:
     - db
@@ -203,7 +204,8 @@
 
 - name: Check if Transparent Hugepages are configured
   shell: grep -w transparent_hugepage=never /etc/default/grub
-  become: yes
+  changed_when: false
+  become: true
   register: transparent_hugepages
   failed_when: ("ERROR" in transparent_hugepages.stdout) or ("FATAL" in transparent_hugepages.stdout)
   tags:
@@ -211,7 +213,7 @@
     - converttohugepage
 
 - name: Getting current Hugepage Value
-  become: yes
+  become: true
   shell: "sysctl -a | grep -w vm.nr_hugepages | grep -o [0-9]*"
   register: current_hugepages
   when: (sysctl_stable | bool)
@@ -219,7 +221,7 @@
     - hugepage
 
 - name: Getting current shmall Value
-  become: yes
+  become: true
   shell: "cat /etc/sysctl.d/97-oracle-db-sysctl.conf | grep shmall | awk -F \"=\" {'print$2'}"
   register: current_shmall
   when: (sysctl_stable | bool)
@@ -228,7 +230,7 @@
     - prepare
 
 - name: Getting current shmmax Value
-  become: yes
+  become: true
   shell: "cat /etc/sysctl.d/97-oracle-db-sysctl.conf | grep shmmax | awk -F \"=\" {'print$2'}"
   register: current_shmmax
   when: (sysctl_stable | bool)
@@ -241,7 +243,7 @@
     that: ansible_memory_mb.real.total > ({{ sga_max_size }}* 1024 + 2048)
     fail_msg: "There should be at least {{ sga_max_size|int + 2 }} GB of System Memory for creating Database {{ oracle_sid }}"
     success_msg: There is sufficient Memory available for Database {{ oracle_sid }}
-  become: yes
+  become: true
   tags:
     - db
     - prepare
@@ -295,13 +297,13 @@
 
 - name: Setup Kernel Parameters
   template:
-    src: roles/pythia/templates/97-oracle-db-sysctl.conf
+    src: "{{ role_path }}/templates/97-oracle-db-sysctl.conf"
     dest: /etc/sysctl.d/97-oracle-db-sysctl.conf
     owner: root
     group: root
     mode: 0644
-    force: yes
-  become: yes
+    force: true
+  become: true
   when: (sysctl_stable | bool) or (not sysctl_exists.stat.exists | bool)
   tags:
     - db
@@ -311,13 +313,13 @@
 
 - name: Setup Kernel Parameters
   template:
-    src: roles/pythia/templates/97-oracle-db-sysctl.conf
+    src: "{{ role_path }}/templates/97-oracle-db-sysctl.conf"
     dest: /etc/sysctl.d/97-oracle-db-sysctl.conf
     owner: root
     group: root
     mode: 0644
-    force: no
-  become: yes
+    force: false
+  become: true
   when: (sysctl_stable | bool) or (not sysctl_exists.stat.exists | bool)
   tags:
     - rdbms
@@ -327,9 +329,9 @@
     name: vm.hugetlb_shm_group
     value: "{{ oracle_gid }}"
     sysctl_file: /etc/sysctl.d/97-oracle-db-sysctl.conf
-    reload: no
+    reload: false
   when: ansible_distribution == 'SLES'
-  become: yes
+  become: true
   tags:
     - rdbms
     - db
@@ -340,13 +342,13 @@
     name: "{{ item }}"
     state: absent
     sysctl_file: /etc/sysctl.conf
-    reload: no
+    reload: false
   with_items:
     - "fs.file-max"
     - "kernel.shmmax"
     - "kernel.shmall"
     - "vm.nr_hugepages"
-  become: yes
+  become: true
   tags:
     - rdbms
     - db
@@ -358,7 +360,7 @@
     name: /etc/sysctl.d/97-oracle-db-sysctl.conf
     line: "###unstable###"
     state: present
-  become: yes
+  become: true
   when: (sysctl_stable | bool) and (sysctl_status.changed | bool)
   tags:
     - db
@@ -371,7 +373,7 @@
     path: /etc/sysctl.d/97-oracle-db-sysctl.conf
     regexp: "###stable###"
     replace: "###unstable###"
-  become: yes
+  become: true
   when: (sysctl_stable | bool) and (not sysctl_status.changed | bool)
   tags:
     - db
@@ -382,7 +384,8 @@
 - name: Make Kernel Parameters active
   command:
     cmd: sysctl --system
-  become: yes
+  changed_when: true
+  become: true
   tags:
     - rdbms
     - db
@@ -391,13 +394,13 @@
 
 - name: Setting Security Limits
   template:
-    src: roles/pythia/templates/97-oracle-db-limits.conf
+    src: "{{ role_path }}/templates/97-oracle-db-limits.conf"
     dest: "/etc/security/limits.d/97-oracle-db-limits.conf"
     owner: root
     group: root
     mode: 0644
-    force: no
-  become: yes
+    force: false
+  become: true
   tags:
     - rdbms
     - prepare
@@ -412,11 +415,11 @@
     - converttohugepage
 
 - name: Disable Transparent Hugepages on RHEL
-  become: yes
+  become: true
   lineinfile:
     state: present
     dest: /etc/default/grub
-    backrefs: yes
+    backrefs: true
     regexp: '^(GRUB_CMDLINE_LINUX=(?!.* transparent_hugepage)\"[^\"]+)(\".*)'
     line: '\1 transparent_hugepage=never\2'
   when: transparent_hugepages.stdout|length == 0 and ansible_distribution != 'SLES'
@@ -425,11 +428,11 @@
     - converttohugepage
 
 - name: Disable Transparent Hugepages on SLES
-  become: yes
+  become: true
   lineinfile:
     state: present
     dest: /etc/default/grub
-    backrefs: yes
+    backrefs: true
     regexp: '^(GRUB_CMDLINE_LINUX_DEFAULT=(?!.* transparent_hugepage)\"[^\"]+)(\".*)'
     line: '\1 transparent_hugepage=never\2'
   when: transparent_hugepages.stdout|length == 0 and ansible_distribution == 'SLES'
@@ -438,7 +441,7 @@
     - converttohugepage
 
 - name: Build new Grub Config
-  become: yes
+  become: true
   command:
     cmd: grub2-mkconfig -o /boot/grub2/grub.cfg
   when: transparent_hugepages.stdout|length == 0
@@ -447,7 +450,7 @@
     - converttohugepage
 
 - name: Reboot
-  become: yes
+  become: true
   reboot:
     post_reboot_delay: 120
     msg: Rebooting for Hugepage Configuration
@@ -461,46 +464,46 @@
     path: /etc/sysctl.d/97-oracle-db-sysctl.conf
     regexp: "###unstable###"
     replace: "###stable###"
-  become: yes
+  become: true
   tags:
     - prepare
     - converttohugepage
 
 - name: Setup Environment Skript for {{ oracle_user }} OS User (1/3)
-  become: yes
+  become: true
   template:
-    src: roles/pythia/templates/ora_set.sh
+    src: "{{ role_path }}/templates/ora_set.sh"
     dest: "{{ oracle_home_dir }}/ora_set.sh"
     mode: 0750
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
-    backup: yes
+    backup: true
   tags:
     - db
     - prepare
 
 - name: Setup Environment Skript for {{ oracle_user }} OS User (2/3)
-  become: yes
+  become: true
   lineinfile:
     path: "{{ oracle_home_dir }}/.bash_profile"
     line: ". ./ora_set.sh"
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0644
-    create: yes
+    create: true
   tags:
     - db
     - prepare
 
 - name: Setup Environment Skript for {{ oracle_user }} OS User (3/3)
-  become: yes
+  become: true
   lineinfile:
     path: "{{ oracle_home_dir }}/.bash_profile"
     line: "umask 027"
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0644
-    create: yes
+    create: true
   tags:
     - db
     - prepare

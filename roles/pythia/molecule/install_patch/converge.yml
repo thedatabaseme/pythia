@@ -1,0 +1,10 @@
+---
+- name: Converge
+  hosts: all
+
+  vars:
+    oracle_version: 21EE
+    install_patch: 33239276
+
+  roles:
+    - pythia

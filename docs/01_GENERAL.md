@@ -22,7 +22,9 @@ Pythia is based on working with (Ansible) TAGs. When creating the command to run
   - duplicate: Specifies, that you want to duplicate a Source Database to a Target Database. Uses RMAN duplicate from active Database. You need to specify the duplicate_source_host, duplicate_target_host, duplicate_source_sid and duplicate_target_sid Variable. As HOSTS you need to specify the Target Host.
   - upgrade: Specifies that you want to upgrade a Database to a new Version. You need to specify the Variables oracle_source_version, oracle_target_version, oracle_sid and upgrade_mode when starting the Playbook with the "upgrade" tag.
 
+## Stage Directory
 
+Some tasks of Pythia relate on a so called "local stage directory". In this directory, Pythia searches for the software archives of the Oracle Database. The location of the stage directory is controlled by the variable `local_stage_directory` under `vars/main.yml`. You have to be aware, that Pythia searches for this directory on the Ansible Controlhost. By default, the location is `/mnt/oracle_stage`. You still can control the specific location of a software archive in the `rdbms_dict.yml` and `patch_dict.yml`. But the location can only be underneath the `local_stage_directory`.
 ## Extra Variables
 
 Beside from specifying a TAG, you need to provide at least these Variable (regardless of which TAG you have specified). You may specify the HOSTS Variable directly in the Playbook, as an Extra Variable or in your Inventory. In these Instructions, we will always hand them over as Extra Variables.

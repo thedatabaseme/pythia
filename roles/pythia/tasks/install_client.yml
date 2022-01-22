@@ -13,7 +13,8 @@
 ###################################################################################
 - name: Check which mountpoint is used by {{ client[client_version|string].oracle_home }}
   command: findmnt -n -o TARGET --target {{ client[client_version|string].oracle_home }}
-  become: yes
+  changed_when: false
+  become: true
   register: oracle_home_mount
   tags:
     - client
@@ -28,7 +29,7 @@
     that: item.size_available > ({{ space_needed_gb }}* 1024 * 1024 * 1024)
     fail_msg: There should be at least {{ space_needed_gb }}GB of free space for installing Client Software
     success_msg: There is sufficient space for installing Client Software
-  become: yes
+  become: true
   when: (item.mount == oracle_home_mount.stdout) and (space_needed_gb > 0)
   with_items:
     - "{{ ansible_mounts }}"
@@ -42,7 +43,7 @@
     that: item.size_available > (client[client_version|string].space_needed_gb * 1024 * 1024 * 1024)
     fail_msg: There should be at least {{ rdbms[oracle_version|string].space_needed_gb }}GB of free space for installing Client Software
     success_msg: There is sufficient space for installing Client Software
-  become: yes
+  become: true
   when: (item.mount == oracle_home_mount.stdout) and (space_needed_gb <= 0)
   with_items:
     - "{{ ansible_mounts }}"
@@ -58,7 +59,8 @@
 ###################################################################################
 - name: Check if Oracle Home specified already registered in Inventory
   shell: "grep -w {{ client[client_version|string].oracle_home }} {{ client[client_version|string].oracle_inventory }}/ContentsXML/inventory.xml"
-  become: yes
+  changed_when: false
+  become: true
   register: result
   failed_when: "'ERROR' in result.stderr"
   tags:
@@ -69,24 +71,24 @@
     that: client[client_version|string].oracle_home not in item.stdout
     fail_msg: "The Oracle Home {{ client[client_version|string].oracle_home }} already registered in Inventory"
     success_msg: "Oracle Home {{ client[client_version|string].oracle_home }} not found."
-  become: yes
+  become: true
   with_items:
     - "{{ result }}"
   tags:
     - client
 
 - name: Check if Oracle Home specified is empty
-  become: yes
+  become: true
   find:
     paths: "{{ client[client_version|string].oracle_home }}"
-  register: emptyHome
+  register: empty_home
   tags:
     - client
 
 - name: Oracle Home specified is not empty
   fail:
     msg: "Oracle Home {{ client[client_version|string].oracle_home }} specified is not empty!"
-  when: emptyHome.matched > 0
+  when: empty_home.matched > 0
   tags:
     - client
 
@@ -103,23 +105,24 @@
     - client
 
 - name: Copy Oracle Software Archive to Staging Area {{ remote_stage_directory }}
-  become: yes
+  become: true
   copy:
     src: "{{ local_stage_directory }}/{{ client[client_version|string].client_dir }}/{{ client[client_version|string].client_file }}"
     dest: "{{ remote_stage_directory }}/{{ client[client_version|string].client_file }}"
-    remote_src: no
+    remote_src: false
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
+    mode: 0644
   tags:
     - client
 
 - name: Unpack Oracle Software
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   unarchive:
     src: "{{ remote_stage_directory }}/{{ client[client_version|string].client_file }}"
     dest: "{{ remote_stage_directory }}"
-    remote_src: yes
+    remote_src: true
     mode: 0755
     group: "{{ oracle_group }}"
     owner: "{{ oracle_user }}"
@@ -130,25 +133,26 @@
   file:
     path: "{{ remote_stage_directory }}/{{ client[client_version|string].client_file }}"
     state: absent
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   tags:
     - client
 
 - name: Setup Oracle Client Software Response File
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: roles/pythia/templates/{{ client_version }}_Client.rsp.j2
+    src: "{{ role_path }}/templates/{{ client_version }}_Client.rsp.j2"
     dest: "{{ remote_stage_directory }}/client/response/{{ client_version }}_Client.rsp"
     mode: 0755
   tags:
     - client
 
 - name: Install Oracle Client Software
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "{{ remote_stage_directory }}/client/runInstaller -silent -ignoreSysPrereqs -waitforcompletion -responseFile {{ remote_stage_directory }}/client/response/{{ client_version }}_Client.rsp -noconfig"
+  shell: "{{ remote_stage_directory }}/client/runInstaller -silent -ignoreSysPrereqs -waitforcompletion -responseFile {{ remote_stage_directory }}/client/response/{{ client_version }}_Client.rsp -noconfig"  # noqa line-length
+  changed_when: true
   register: result
   failed_when: ("ERROR" in result.stdout) or ("FATAL" in result.stdout)
   tags:
@@ -156,7 +160,8 @@
 
 - name: Execute root Skripts
   shell: "{{ item }}"
-  become: yes
+  changed_when: true
+  become: true
   register: result
   with_items:
     - "/bin/sh {{ client[client_version|string].oracle_inventory }}/orainstRoot.sh"
@@ -166,7 +171,7 @@
     - client
 
 - name: Cleanup Remote Staging Area
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   file:
     path: "{{ remote_stage_directory }}/client"
