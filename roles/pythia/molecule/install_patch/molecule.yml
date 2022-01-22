@@ -8,6 +8,7 @@ platforms:
     image: oraclelinux:8
     tmpfs:
       - /run
+      - /tmp
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
@@ -18,7 +19,7 @@ platforms:
 provisioner:
   name: ansible
   ansible_args:
-    - --tags=rdbms,db,patch
+    - --tags=patch
     - --become-method=su
 verifier:
   name: ansible

@@ -6,8 +6,6 @@
     oracle_version: 21EE
     oracle_sid: ORA21
     sga_max_size: 2
-    runinstaller_parameters: " -ignoreInternalDriverError"
-    install_patch: "33239276"
     emexpress: NONE
 
   roles:
