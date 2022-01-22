@@ -41,7 +41,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: roles/pythia/templates/upgrade_config.cfg
+    src: "{{ role_path }}/templates/upgrade_config.cfg"
     dest: "{{ rdbms[oracle_source_version|string].oracle_home }}/rdbms/admin/upgrade_config.cfg"
     mode: 0664
   tags:

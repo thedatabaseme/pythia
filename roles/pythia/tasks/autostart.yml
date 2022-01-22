@@ -58,7 +58,7 @@
 
 - name: Deploy Service File
   template:
-    src: "roles/pythia/templates/dbora.service.j2"
+    src: "{{ role_path }}/templates/dbora.service.j2"
     dest: "/lib/systemd/system/dbora{{ oracle_sid }}.service"
     owner: root
     group: root
@@ -70,7 +70,7 @@
 
 - name: Deploy DB Start Script
   template:
-    src: "roles/pythia/templates/dbstart.j2"
+    src: "{{ role_path }}/templates/dbstart.j2"
     dest: "{{ oracle_home }}/bin/dbstart"
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
@@ -83,7 +83,7 @@
 
 - name: Deploy DB Stop Script
   template:
-    src: "roles/pythia/templates/dbshut.j2"
+    src: "{{ role_path }}/templates/dbshut.j2"
     dest: "{{ oracle_home }}/bin/dbshut"
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"

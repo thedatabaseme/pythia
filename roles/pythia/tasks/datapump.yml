@@ -55,7 +55,7 @@
   become_user: "{{ oracle_user }}"
   blockinfile:
     dest: "{{ datapump_target_home.stdout }}/network/admin/tnsnames.ora"
-    block: "{{ lookup('template', 'roles/pythia/templates/tnsnames_datapump.ora') }}"
+    block: "{{ lookup('template', '{{ role_path }}/templates/tnsnames_datapump.ora') }}"
     backup: true
     create: true
     marker: "## {mark} Datapump Source Database"
@@ -115,7 +115,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: "roles/pythia/templates/datapump.par.j2"
+    src: "{{ role_path }}/templates/datapump.par.j2"
     dest: "{{ remote_stage_directory }}/datapump.par"
     mode: 0755
   delegate_to: "{{ datapump_target_host }}"

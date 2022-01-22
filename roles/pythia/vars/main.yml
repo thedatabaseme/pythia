@@ -4,7 +4,7 @@
 #    Control Server
 #  - remote_stage_directory (Default /oracle/sources): Software Stage Directory on the Target
 #    Server. E.G. Patches are staged here before applying it to a RDBMS or Database
-#  - local_sql_stage_directory (Default roles/pythia/files/default): Stage Directory for SQL
+#  - local_sql_stage_directory (Default {{ role_path }}/files/default): Stage Directory for SQL
 #    Scripts on Ansible Control Server.
 #  - remote_sql_stage_directory (Default {{ remote_stage_directory }}/scripts): Stage Directory
 #    for SQL Scripts on Target Server.
@@ -45,7 +45,7 @@ current_hugepages: 0
 # Stage and Script Directories
 local_stage_directory: /mnt/oracle_stage
 remote_stage_directory: /oracle/sources
-local_sql_stage_directory: roles/pythia/files/default
+local_sql_stage_directory: "{{ role_path }}/files/default"
 remote_sql_stage_directory: "{{ remote_stage_directory }}/scripts"
 
 # Overloaded Variables. Should not be set here

@@ -363,7 +363,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: "roles/pythia/templates/duplicate_target_listener.ora"
+    src: "{{ role_path }}/templates/duplicate_target_listener.ora"
     dest: "{{ duplicate_source_home.stdout }}/network/admin/listener.ora"
     mode: 0755
     backup: true
@@ -403,7 +403,7 @@
   become_user: "{{ oracle_user }}"
   blockinfile:
     dest: "{{ duplicate_source_home.stdout }}/network/admin/tnsnames.ora"
-    block: "{{ lookup('template', 'roles/pythia/templates/tnsnames_duplicate_source.ora') }}"
+    block: "{{ lookup('template', '{{ role_path }}/templates/tnsnames_duplicate_source.ora') }}"
     backup: true
     create: true
     marker: "# Duplicate Source Database"
@@ -431,7 +431,7 @@
   become_user: "{{ oracle_user }}"
   blockinfile:
     dest: "{{ duplicate_source_home.stdout }}/network/admin/tnsnames.ora"
-    block: "{{ lookup('template', 'roles/pythia/templates/tnsnames_duplicate_target.ora') }}"
+    block: "{{ lookup('template', '{{ role_path }}/templates/tnsnames_duplicate_target.ora') }}"
     backup: true
     create: true
     marker: "# Duplicate Target Database"
@@ -471,7 +471,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: "roles/pythia/templates/initduplicate.ora"
+    src: "{{ role_path }}/templates/initduplicate.ora"
     dest: "{{ duplicate_source_home.stdout }}/dbs/init{{ duplicate_target_sid }}.ora"
     mode: 0755
     backup: true
@@ -485,7 +485,7 @@
   become_user: "{{ oracle_user }}"
   fetch:
     src: "{{ duplicate_source_home.stdout }}/dbs/orapw{{ duplicate_source_sid }}"
-    dest: "roles/pythia/files/orapw{{ duplicate_source_sid }}"
+    dest: "{{ role_path }}/files/orapw{{ duplicate_source_sid }}"
     flat: true
   delegate_to: "{{ duplicate_source_host }}"
   run_once: true
@@ -496,7 +496,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   copy:
-    src: "roles/pythia/files/orapw{{ duplicate_source_sid }}"
+    src: "{{ role_path }}/files/orapw{{ duplicate_source_sid }}"
     dest: "{{ duplicate_source_home.stdout }}/dbs/orapw{{ duplicate_target_sid }}"
     remote_src: false
     owner: "{{ oracle_user }}"
@@ -509,7 +509,7 @@
 
 - name: Cleanup Password File on localhost
   file:
-    path: "roles/pythia/files/orapw{{ duplicate_source_sid }}"
+    path: "{{ role_path }}/files/orapw{{ duplicate_source_sid }}"
     state: absent
   delegate_to: "localhost"
   run_once: true
@@ -563,7 +563,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: "roles/pythia/templates/rman_arc.par.j2"
+    src: "{{ role_path }}/templates/rman_arc.par.j2"
     dest: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par"
     mode: 0755
   register: rman_arc_parfile_backup
@@ -622,7 +622,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: "roles/pythia/templates/rman_duplicate_{{ duplicate_clone_spfile }}.par"
+    src: "{{ role_path }}/templates/rman_duplicate_{{ duplicate_clone_spfile }}.par"
     dest: "{{ remote_stage_directory }}/rman_duplicate.par"
     mode: 0755
   delegate_to: "{{ duplicate_target_host }}"

@@ -142,7 +142,7 @@
   become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: roles/pythia/templates/{{ client_version }}_Client.rsp.j2
+    src: "{{ role_path }}/templates/{{ client_version }}_Client.rsp.j2"
     dest: "{{ remote_stage_directory }}/client/response/{{ client_version }}_Client.rsp"
     mode: 0755
   tags:
