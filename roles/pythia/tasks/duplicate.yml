@@ -3,7 +3,7 @@
 ###################################################################################
 # Include Var File for alternative Users who's passwords have to be preserved.
 # Only if the File exists under var/user_pwd_preservation_{{ duplicate_target_sid }}.yml
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Include User List for Password preservation
@@ -23,12 +23,14 @@
 ###################################################################################
 # Before Duplicating a Database we need to check if this Database is already
 # existant and running.
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
+
 - name: Check if Source Oracle SID {{ duplicate_source_sid }} already exists
   shell: "grep -w {{ duplicate_source_sid }} /etc/oratab"
-  become: yes
+  become: true
   register: result
+  changed_when: false
   failed_when: "'ERROR' in result.stderr"
   delegate_to: "{{ duplicate_source_host }}"
   run_once: true
@@ -40,7 +42,7 @@
     that: duplicate_source_sid in item.stdout
     fail_msg: There is no database {{ duplicate_source_sid }} on the Source System.
     success_msg: Oracle SID {{ duplicate_source_sid }} is registered on the Source System. Proceed with Duplicate.
-  become: yes
+  become: true
   with_items:
     - "{{ result }}"
   delegate_to: "{{ duplicate_source_host }}"
@@ -49,8 +51,9 @@
     - duplicate
 
 - name: Gather Oracle Home used by Source SID {{ duplicate_source_sid }}
-  become: yes
+  become: true
   shell: "cat /etc/oratab | grep {{ duplicate_source_sid }} | awk -F \":\" {'print$2'}"
+  changed_when: false
   args:
     removes: /etc/oratab
   register: duplicate_source_home
@@ -60,9 +63,10 @@
     - duplicate
 
 - name: Check if Source Database is Open
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"select status from v\\$instance;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_source_sid }}"
@@ -77,7 +81,7 @@
     that: '"OPEN" | string in item.stdout'
     fail_msg: The Source Database {{ duplicate_source_sid }} is not in OPEN State.
     success_msg: Oracle SID {{ duplicate_source_sid }} is in OPEN State. Proceed with Duplicate.
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   with_items:
     - "{{ source_db_status }}"
@@ -89,13 +93,14 @@
 ###################################################################################
 # We create needed Directory Structure for the Target Database. Before so, we
 # check which distinct Filesystems will be needed from the Source Database
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Gather distinct Datafile Directories from Source Database
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set lines 200; \\n set pages 100; \\n set feedback off; \\n select distinct regexp_substr(name,'^.*/') from v\\$datafile;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"set heading off; \\n set lines 200; \\n set pages 100; \\n set feedback off; \\n select distinct regexp_substr(name,'^.*/') from v\\$datafile;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_source_sid }}"
@@ -124,7 +129,7 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0774
-  become: yes
+  become: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   with_items:
@@ -138,12 +143,13 @@
 # Check if the specified Oracle Home for the Source is also installed on the
 # Target System. It is assumed, that the RDBMS Installation Path is the same
 # for Source and Target side.
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Get Oracle Inventory Location on Target Server
   shell: "grep -w inventory_loc /etc/oraInst.loc | awk -F \"=\" {'print$2'}"
-  become: yes
+  changed_when: false
+  become: true
   register: oracle_inventory
   failed_when: "'ERROR' in result.stderr"
   delegate_to: "{{ duplicate_target_host }}"
@@ -156,7 +162,7 @@
     that: oracle_inventory.stdout|length > 0
     fail_msg: It seems, that there is no Oracle Software installed on Target Host {{ duplicate_target_host }}
     success_msg: Oracle Software seem to be installed on Target Host {{ duplicate_target_host }}. Proceed with Duplicate.
-  become: yes
+  become: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   tags:
@@ -164,7 +170,8 @@
 
 - name: Check if Oracle Home specified is also installed on the Target Server
   shell: "grep -w {{ duplicate_source_home.stdout }} {{ oracle_inventory.stdout }}/ContentsXML/inventory.xml"
-  become: yes
+  changed_when: false
+  become: true
   register: result
   failed_when: "'ERROR' in result.stderr"
   delegate_to: "{{ duplicate_target_host }}"
@@ -177,7 +184,7 @@
     that: duplicate_source_home.stdout in item.stdout
     fail_msg: "The Oracle Home {{ duplicate_source_home.stdout }} is not registered in Inventory"
     success_msg: "Oracle Home {{ duplicate_source_home.stdout }} found."
-  become: yes
+  become: true
   with_items:
     - "{{ result }}"
   tags:
@@ -187,13 +194,14 @@
 # Before Duplicating a Database we need to check if the Target System has a running
 # Database and if so, this database will be removed before starting the duplicate.
 # This will be controlled by the variable duplicate_remove_target
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Check if Target Database is Open
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set feedback off; \\n select status from v\\$instance;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"set heading off; \\n set feedback off; \\n select status from v\\$instance;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -206,9 +214,9 @@
 - name: Oracle SID on Target System is in OPEN State
   assert:
     that: '"OPEN" | string not in item.stdout'
-    fail_msg: The Source Database {{ duplicate_target_sid }} is in OPEN State. If you want to remove it prior to duplication, specify so in the duplicate_remove_target variable!
-    success_msg: Oracle SID {{ duplicate_target_sid }} is not in OPEN State. Proceed with Duplicate.
-  become: yes
+    fail_msg: "The Source Database {{ duplicate_target_sid }} is in OPEN State. If you want to remove it prior to duplication, specify so in the duplicate_remove_target variable!"  # noqa line-length
+    success_msg: "Oracle SID {{ duplicate_target_sid }} is not in OPEN State. Proceed with Duplicate."
+  become: true
   become_user: "{{ oracle_user }}"
   when: (not duplicate_remove_target)
   with_items:
@@ -219,9 +227,10 @@
     - duplicate
 
 - name: Backup current User Passwords for setting them later
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set lines 500; \\n set feedback off; \\n spool {{ remote_sql_stage_directory }}/preserve_passwords_{{ duplicate_target_sid }}.sql; \\n select 'alter user ' || name || ' identified by values ''' || spare4 || ''';' from user\\$ where name in ({{ duplicate_preserve_pwd_user_list }}) and spare4 is not null;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"set heading off; \\n set lines 500; \\n set feedback off; \\n spool {{ remote_sql_stage_directory }}/preserve_passwords_{{ duplicate_target_sid }}.sql; \\n select 'alter user ' || name || ' identified by values ''' || spare4 || ''';' from user\\$ where name in ({{ duplicate_preserve_pwd_user_list }}) and spare4 is not null;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
+  changed_when: true
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -235,9 +244,10 @@
     - duplicate
 
 - name: Gather Controlfiles from running Target Database
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set lines 500; \\n set feedback off; \\n select value from v\\$parameter where name = 'control_files';\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"set heading off; \\n set lines 500; \\n set feedback off; \\n select value from v\\$parameter where name = 'control_files';\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -251,9 +261,9 @@
     - duplicate
 
 - name: Gather Datafiles from running Target Database
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set lines 500; \\n set pages 500; \\n set feedback off; \\n select file_name from dba_data_files;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"set heading off; \\n set lines 500; \\n set pages 500; \\n set feedback off; \\n select file_name from dba_data_files;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -267,9 +277,9 @@
     - duplicate
 
 - name: Gather Tempfiles from running Target Database
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set lines 500; \\n set pages 500; \\n set feedback off; \\n select file_name from dba_temp_files;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"set heading off; \\n set lines 500; \\n set pages 500; \\n set feedback off; \\n select file_name from dba_temp_files;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -283,9 +293,9 @@
     - duplicate
 
 - name: Gather Redologs from running Target Database
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set lines 500; \\n set pages 500; \\n set feedback off; \\n select member from v\\$logfile;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  shell: "echo -e \"set heading off; \\n set lines 500; \\n set pages 500; \\n set feedback off; \\n select member from v\\$logfile;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -299,7 +309,7 @@
     - duplicate
 
 - name: Dropping Target Database {{ duplicate_target_sid }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"shutdown abort; \\n startup mount exclusive restrict; \\n drop database;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
   environment:
@@ -315,13 +325,14 @@
 
 ###################################################################################
 # Check the Listener and TNS Configuration on Source and Target Side
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Gather Listeners running on Source System Oracle Home {{ duplicate_source_home.stdout }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "ps -ef | grep {{ duplicate_source_home.stdout }} | grep tnslsnr | grep {{ listener_prefix }}{{ duplicate_source_sid }} | grep -v grep | awk {'print$9'}"
+  shell: "ps -ef | grep {{ duplicate_source_home.stdout }} | grep tnslsnr | grep {{ listener_prefix }}{{ duplicate_source_sid }} | grep -v grep | awk {'print$9'}"  # noqa line-length
+  changed_when: false
   delegate_to: "{{ duplicate_source_host }}"
   run_once: true
   register: duplicate_source_listener
@@ -333,14 +344,15 @@
     that: duplicate_source_listener.stdout|length > 0
     fail_msg: "There seems no Listener running on Source Host {{ duplicate_source_host }}"
     success_msg: "Listener is running. Proceed with duplicate."
-  become: yes
+  become: true
   tags:
     - duplicate
 
 - name: Gather Listeners running on Target System Oracle Home {{ duplicate_source_home.stdout }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "ps -ef | grep {{ duplicate_source_home.stdout }} | grep tnslsnr | grep {{ listener_prefix }}{{ duplicate_target_sid }} | grep -v grep | awk {'print$9'}"
+  shell: "ps -ef | grep {{ duplicate_source_home.stdout }} | grep tnslsnr | grep {{ listener_prefix }}{{ duplicate_target_sid }} | grep -v grep | awk {'print$9'}"  # noqa line-length
+  changed_when: false
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   register: duplicate_target_listener
@@ -348,13 +360,13 @@
     - duplicate
 
 - name: Create Listener {{ listener_prefix }}{{ duplicate_target_sid }} on Port {{ listener_port }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: "roles/pythia/templates/duplicate_target_listener.ora"
+    src: "{{ role_path }}/templates/duplicate_target_listener.ora"
     dest: "{{ duplicate_source_home.stdout }}/network/admin/listener.ora"
     mode: 0755
-    backup: yes
+    backup: true
   when: (duplicate_target_listener.stdout_lines|length == 0)
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -362,7 +374,7 @@
     - duplicate
 
 - name: Start Listener {{ listener_prefix }}{{ duplicate_target_sid }} on Target System
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ duplicate_source_home.stdout }}/bin/lsnrctl start {{ listener_prefix }}{{ duplicate_target_sid }}"
   environment:
@@ -375,9 +387,10 @@
     - duplicate
 
 - name: Check if TNSNAMES Entry for Source Database is in Targets tnsnames.ora
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "grep -w {{ duplicate_source_sid }} {{ duplicate_source_home.stdout }}/network/admin/tnsnames.ora"
+  changed_when: false
   failed_when: "'ERROR' in result.stderr"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -386,14 +399,15 @@
     - duplicate
 
 - name: Create tnsnames.ora entry for Source Database {{ duplicate_source_sid }} on Target Host {{ duplicate_target_host }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   blockinfile:
     dest: "{{ duplicate_source_home.stdout }}/network/admin/tnsnames.ora"
-    block: "{{ lookup('template', 'roles/pythia/templates/tnsnames_duplicate_source.ora') }}"
-    backup: yes
-    create: yes
+    block: "{{ lookup('template', '{{ role_path }}/templates/tnsnames_duplicate_source.ora') }}"
+    backup: true
+    create: true
     marker: "# Duplicate Source Database"
+    mode: 0755
   when: (duplicate_target_tnsnames.stdout|length == 0)
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -401,9 +415,10 @@
     - duplicate
 
 - name: Check if TNSNAMES Entry for Target Database is in Targets tnsnames.ora
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "grep -w {{ duplicate_target_sid }} {{ duplicate_source_home.stdout }}/network/admin/tnsnames.ora"
+  changed_when: false
   failed_when: "'ERROR' in result.stderr"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -412,14 +427,15 @@
     - duplicate
 
 - name: Create tnsnames.ora entry for Target Database {{ duplicate_target_sid }} on Target Host {{ duplicate_target_host }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   blockinfile:
     dest: "{{ duplicate_source_home.stdout }}/network/admin/tnsnames.ora"
-    block: "{{ lookup('template', 'roles/pythia/templates/tnsnames_duplicate_target.ora') }}"
-    backup: yes
-    create: yes
+    block: "{{ lookup('template', '{{ role_path }}/templates/tnsnames_duplicate_target.ora') }}"
+    backup: true
+    create: true
     marker: "# Duplicate Target Database"
+    mode: 0755
   when: (duplicate_target_tnsnames.stdout|length == 0)
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -427,9 +443,10 @@
     - duplicate
 
 - name: Try TNSPING to Source Listener from Target Host {{ duplicate_target_host }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ duplicate_source_home.stdout }}/bin/tnsping {{ duplicate_source_sid }}"
+  changed_when: false
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_source_sid }}"
@@ -440,7 +457,7 @@
 
 ###################################################################################
 # Create init.ora and copy Password File
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Setup to takeover SPFILE from Source or not
@@ -451,39 +468,40 @@
     - duplicate
 
 - name: Create Duplicate init.ora File to start Instance later
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: "roles/pythia/templates/initduplicate.ora"
+    src: "{{ role_path }}/templates/initduplicate.ora"
     dest: "{{ duplicate_source_home.stdout }}/dbs/init{{ duplicate_target_sid }}.ora"
     mode: 0755
-    backup: yes
+    backup: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   tags:
     - duplicate
 
 - name: Fetching Oracle Password File from Source Database {{ duplicate_source_sid }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   fetch:
     src: "{{ duplicate_source_home.stdout }}/dbs/orapw{{ duplicate_source_sid }}"
-    dest: "roles/pythia/files/orapw{{ duplicate_source_sid }}"
-    flat: yes
+    dest: "{{ role_path }}/files/orapw{{ duplicate_source_sid }}"
+    flat: true
   delegate_to: "{{ duplicate_source_host }}"
   run_once: true
   tags:
     - duplicate
 
 - name: Copy Oracle Password File from Source Database {{ duplicate_source_sid }} to Target Host {{ duplicate_target_host }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   copy:
-    src: "roles/pythia/files/orapw{{ duplicate_source_sid }}"
+    src: "{{ role_path }}/files/orapw{{ duplicate_source_sid }}"
     dest: "{{ duplicate_source_home.stdout }}/dbs/orapw{{ duplicate_target_sid }}"
-    remote_src: no
+    remote_src: false
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
+    mode: 0640
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   tags:
@@ -491,7 +509,7 @@
 
 - name: Cleanup Password File on localhost
   file:
-    path: "roles/pythia/files/orapw{{ duplicate_source_sid }}"
+    path: "{{ role_path }}/files/orapw{{ duplicate_source_sid }}"
     state: absent
   delegate_to: "localhost"
   run_once: true
@@ -503,7 +521,7 @@
     name: /etc/oratab
     line: "{{ duplicate_target_sid }}:{{ duplicate_source_home.stdout }}:N"
     state: present
-  become: yes
+  become: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   tags:
@@ -515,7 +533,7 @@
 # This will only happen, when the according Par-Files of the Archivelog Backup
 # can be found under $ORACLE_HOME/tds_rman
 # See Issue #125 for more details
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Stat if the Parfile for Archivelog Backups exist
@@ -529,11 +547,12 @@
     - duplicate
 
 - name: Backup Archivelog Backup Parameterfile from Source Database
-  become: yes
+  become: true
   copy:
     src: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par"
     dest: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par_backupbeforeduplicate"
-    remote_src: yes
+    remote_src: true
+    mode: 0666
   delegate_to: "{{ duplicate_source_host }}"
   run_once: true
   when: (archive_parfile_status.stat.exists)
@@ -541,10 +560,10 @@
     - duplicate
 
 - name: Change Archivelog Backup Parameterfile on Source Side to prevent Archivelog deletion
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: "roles/pythia/templates/rman_arc.par.j2"
+    src: "{{ role_path }}/templates/rman_arc.par.j2"
     dest: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par"
     mode: 0755
   register: rman_arc_parfile_backup
@@ -556,11 +575,11 @@
 
 ###################################################################################
 # Start Target Instance and start duplicate
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Check if SPFILE currently exists on Target
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   stat:
     path: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora"
@@ -571,12 +590,13 @@
     - duplicate
 
 - name: Backup Current SPFILE from Target Database
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   copy:
     src: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora"
     dest: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora_backupbeforeduplicate"
-    remote_src: yes
+    remote_src: true
+    mode: 0640
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: (spfile_exists.stat.exists)
@@ -584,9 +604,10 @@
     - duplicate
 
 - name: Start Databases Instance {{ duplicate_target_sid }}
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo startup nomount force pfile={{ duplicate_source_home.stdout }}/dbs/init{{ duplicate_target_sid }}.ora | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  shell: "echo startup nomount force pfile={{ duplicate_source_home.stdout }}/dbs/init{{ duplicate_target_sid }}.ora | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
+  changed_when: result.rc == 0
   register: result
   failed_when: "'ERROR' in result.stderr"
   environment:
@@ -598,10 +619,10 @@
     - duplicate
 
 - name: Create RMAN Commandfile for duplicate
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   template:
-    src: "roles/pythia/templates/rman_duplicate_{{ duplicate_clone_spfile }}.par"
+    src: "{{ role_path }}/templates/rman_duplicate_{{ duplicate_clone_spfile }}.par"
     dest: "{{ remote_stage_directory }}/rman_duplicate.par"
     mode: 0755
   delegate_to: "{{ duplicate_target_host }}"
@@ -612,15 +633,15 @@
 ###################################################################################
 # The Duplicate runs in a Block to be able to "rescue" on fail. On Rescue, the
 # maybe backed up rman_arc.par File will be copied back.
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Starting Duplicate
   block:
     - name: Run RMAN and start duplicate
-      become: yes
+      become: true
       become_user: "{{ oracle_user }}"
-      shell: "{{ duplicate_source_home.stdout }}/bin/rman target sys/'{{ lookup('vars', 'vault_sys_' + duplicate_source_sid) }}'@{{ duplicate_source_sid }} auxiliary sys/'{{ lookup('vars', 'vault_sys_' + duplicate_source_sid) }}'@{{ duplicate_target_sid }} cmdfile={{ remote_stage_directory }}/rman_duplicate.par log={{ remote_stage_directory }}/duplicate_{{ duplicate_target_sid }}.log"
+      shell: "{{ duplicate_source_home.stdout }}/bin/rman target sys/'{{ lookup('vars', 'vault_sys_' + duplicate_source_sid) }}'@{{ duplicate_source_sid }} auxiliary sys/'{{ lookup('vars', 'vault_sys_' + duplicate_source_sid) }}'@{{ duplicate_target_sid }} cmdfile={{ remote_stage_directory }}/rman_duplicate.par log={{ remote_stage_directory }}/duplicate_{{ duplicate_target_sid }}.log"  # noqa line-length
       environment:
         ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
         ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -633,11 +654,12 @@
         - duplicate
   always:
     - name: Restore original RMAN Archive Backup Parameterfile on Source System
-      become: yes
+      become: true
       copy:
         src: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par_backupbeforeduplicate"
         dest: "{{ duplicate_source_home.stdout }}/tds_rman/rman_arc.par"
-        remote_src: yes
+        mode: 0666
+        remote_src: true
       delegate_to: "{{ duplicate_source_host }}"
       run_once: true
       when: (archive_parfile_status.stat.exists)
@@ -647,11 +669,11 @@
 ###################################################################################
 # If Parameters should be preserved from existing Target Database, then let's
 # restore the old configuration now.
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Shutdown Target Database for restoring the original SPFILE
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"shutdown immediate;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
   environment:
@@ -664,12 +686,13 @@
     - duplicate
 
 - name: Restore original SPFILE from Target Database
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   copy:
     src: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora_backupbeforeduplicate"
     dest: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora"
-    remote_src: yes
+    mode: 0640
+    remote_src: true
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: (duplicate_preserve_parameter == 'target') and (spfile_exists.stat.exists)
@@ -677,7 +700,7 @@
     - duplicate
 
 - name: Startup Target Database for restoring the original SPFILE
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "echo -e \"startup;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
   environment:
@@ -690,7 +713,7 @@
     - duplicate
 
 - name: Remove Backup of SPFILE
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   file:
     path: "{{ duplicate_source_home.stdout }}/dbs/spfile{{ duplicate_target_sid }}.ora_backupbeforeduplicate"
@@ -703,17 +726,18 @@
 
 ###################################################################################
 # We are setting the backed up Passwords of the original Target Database here
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Preprocess Scripts for execution
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   lineinfile:
     path: "{{ remote_sql_stage_directory }}/preserve_passwords_{{ duplicate_target_sid }}.sql"
     line: "exit;"
     state: present
-    create: yes
+    create: true
+    mode: 0774
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: duplicate_preserve_passwords|bool
@@ -721,7 +745,7 @@
     - duplicate
 
 - name: Restoring Passwords of original Target Database
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ duplicate_source_home.stdout }}/bin/sqlplus / as sysdba @{{ remote_sql_stage_directory }}/preserve_passwords_{{ duplicate_target_sid }}.sql"
   environment:
@@ -734,7 +758,7 @@
     - duplicate
 
 - name: Cleanup Password Scripts
-  become: yes
+  become: true
   file:
     path: "{{ remote_sql_stage_directory }}//preserve_passwords_{{ duplicate_target_sid }}.sql"
     state: absent
@@ -747,7 +771,7 @@
 ###################################################################################
 # We check if there are SQL Scripts to be executed and execute them to the
 # newly created Target Database
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Copy Scripts to {{ remote_sql_stage_directory }}
@@ -757,7 +781,7 @@
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
     mode: 0755
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
@@ -766,13 +790,14 @@
     - duplicate
 
 - name: Preprocess Scripts for execution
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   lineinfile:
     path: "{{ remote_sql_stage_directory }}/duplicate_{{ duplicate_source_sid }}_post.sql"
     line: "exit;"
     state: present
-    create: yes
+    create: true
+    mode: 0774
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
   when: duplicate_run_post_script|bool
@@ -780,7 +805,7 @@
     - duplicate
 
 - name: Executing SQL Scripts
-  become: yes
+  become: true
   become_user: "{{ oracle_user }}"
   shell: "{{ duplicate_source_home.stdout }}/bin/sqlplus / as sysdba @{{ remote_sql_stage_directory }}/duplicate_{{ duplicate_source_sid }}_post.sql"
   environment:
@@ -795,7 +820,7 @@
 
 ###################################################################################
 # Show the SQL Script Output if the scriptoutput Variable is specified.
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: SQL Script Output
@@ -807,11 +832,11 @@
 
 ###################################################################################
 # Cleanup the Scripts from the Remote Staging Area
-# Tag: duplicate
+# TAG: duplicate
 ###################################################################################
 
 - name: Cleanup Scripts
-  become: yes
+  become: true
   file:
     path: "{{ remote_sql_stage_directory }}/duplicate_{{ duplicate_source_sid }}_post.sql"
     state: absent

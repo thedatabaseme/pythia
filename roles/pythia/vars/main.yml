@@ -1,24 +1,38 @@
 ---
 # main.yml Variables (can be set when calling the playbook as extra Variables, see Examples):
-#  - local_stage_directory (Default /mnt/oracle_stage): Software Stage Directory on the Ansible Control Server
-#  - remote_stage_directory (Default /oracle/sources): Software Stage Directory on the Target Server. E.G. Patches are staged here before applying it to a RDBMS or Database
-#  - local_sql_stage_directory (Default roles/pythia/files/default): Stage Directory for SQL Scripts on Ansible Control Server.
-#  - remote_sql_stage_directory (Default {{ remote_stage_directory }}/scripts): Stage Directory for SQL Scripts on Target Server.
-#  - space_needed_gb: Space approximately in GB for installing the RDBMS. Respects, that there is probably a Patch installed on top. OVERLOADS rdbms_dict.yml space_needed_gb. SHOULD NOT BE SPECIFIED WITHIN HERE. SHOULD BE SPECIFIED AS EXTRA VARIABLE IN PLAYBOOK CALL.
+#  - local_stage_directory (Default /mnt/oracle_stage): Software Stage Directory on the Ansible
+#    Control Server
+#  - remote_stage_directory (Default /oracle/sources): Software Stage Directory on the Target
+#    Server. E.G. Patches are staged here before applying it to a RDBMS or Database
+#  - local_sql_stage_directory (Default {{ role_path }}/files/default): Stage Directory for SQL
+#    Scripts on Ansible Control Server.
+#  - remote_sql_stage_directory (Default {{ remote_stage_directory }}/scripts): Stage Directory
+#    for SQL Scripts on Target Server.
+#  - space_needed_gb: Space approximately in GB for installing the RDBMS. Respects, that there
+#    is probably a Patch installed on top. OVERLOADS rdbms_dict.yml space_needed_gb. SHOULD NOT
+#    BE SPECIFIED WITHIN HERE. SHOULD BE SPECIFIED AS EXTRA VARIABLE IN PLAYBOOK CALL.
 #  - reboot_required (Default false): Just for initializing the Variable. Must not be modified
-#  - reboot_ack (false): Must be specified when calling the playbook. Configuring Hugepages mostly need a reboot. This acknowledges the reboot. Must be specified when tagging hugepage or converttohugepage
-#  - generated_password: A Password generator which is used for generating a complex password for the Oracle OS User when it is created. If so, the password will be printed.
-#  - generated_db_password: A Password generator which is used for generating a less complex password for the Oracle Database Users SYS and SYSTEM when creating a database.
-#  - generated_default_password: A Password generator which is used for generating a less complex password for the Oracle Database Default Users when creating a database.
-#  - sles15_packages, sles12_packages, rhel7_packages, rhel8_packages: A list of Packages that will be installed before installing the Oracle RDBMS Software. The list can be found in the Oracle Installation Guide Documentation for each OS.
-#  - shmall (Default 2097152): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
-#  - shmmax (Default 4294967295): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
+#  - reboot_ack (false): Must be specified when calling the playbook. Configuring Hugepages mostly
+#    need a reboot. This acknowledges the reboot. Must be specified when tagging hugepage or
+#    converttohugepage
+#  - generated_password: A Password generator which is used for generating a complex password for
+#    the Oracle OS User when it is created. If so, the password will be printed.
+#  - generated_db_password: A Password generator which is used for generating a less complex password
+#    for the Oracle Database Users SYS and SYSTEM when creating a database.
+#  - generated_default_password: A Password generator which is used for generating a less complex
+#    password for the Oracle Database Default Users when creating a database.
+#  - sles15_packages, sles12_packages, rhel7_packages, rhel8_packages: A list of Packages that will
+#    be installed before installing the Oracle RDBMS Software. The list can be found in the Oracle
+#    Installation Guide Documentation for each OS.
+#  - shmall (Default 2097152): Will be calculated during Playbook Runtime. Will be included to the
+#    sysctl Configuration when deploying a Database
+#  - shmmax (Default 4294967295): Will be calculated during Playbook Runtime. Will be included to the
+#    sysctl Configuration when deploying a Database
 #  - current_shmall (Default 0): Just for initializing the Variable. Must not be modified
 #  - current_shmmax (Default 0): Just for initializing the Variable. Must not be modified
 #  - current_hugepages (Default 0): Just for initializing the Variable. Must not be modified
-#  - hugepages (Default 0): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
-
-# vars file for pythia
+#  - hugepages (Default 0): Will be calculated during Playbook Runtime. Will be included to the sysctl
+#    Configuration when deploying a Database
 
 # OS Kernel Parameter Variables. Will be calculated during Playbook Run. Must not be set here
 shmall: 2097152
@@ -31,7 +45,7 @@ current_hugepages: 0
 # Stage and Script Directories
 local_stage_directory: /mnt/oracle_stage
 remote_stage_directory: /oracle/sources
-local_sql_stage_directory: roles/pythia/files/default
+local_sql_stage_directory: "{{ role_path }}/files/default"
 remote_sql_stage_directory: "{{ remote_stage_directory }}/scripts"
 
 # Overloaded Variables. Should not be set here
@@ -86,6 +100,7 @@ sles15_packages:
   - xz
   - psmisc
   - acl
+  - unzip
 
 sles12_packages:
   - bc
@@ -127,6 +142,7 @@ sles12_packages:
   - xz
   - psmisc
   - acl
+  - unzip
 
 rhel7_packages:
   - bc
@@ -160,6 +176,7 @@ rhel7_packages:
   - targetcli
   - psmisc
   - acl
+  - unzip
 
 rhel8_packages:
   - bc
@@ -189,3 +206,4 @@ rhel8_packages:
   - sysstat
   - psmisc
   - acl
+  - unzip

@@ -32,6 +32,11 @@ Please also check the `vars/rdbms_dict.yml` and set the following Variables as y
 |space_needed_gb|Space approximately in GB for installing the RDBMS. Respects,<br> that there is probably a Patch installed on top|
 |desc|Description of the RDBMS|
 
+### Optional Variables
+
+| Variable Name | Description              | Default Value |
+|---------------|--------------------------|---------------|
+|runinstaller_parameters|Additional runinstaller parameters during installation<br>of Oracle software. For example `-ignoreInternalDriverError`.|`NONE`|
 ## Examples
 
 Example: Install Oracle RDBMS with Version 18c as Standard Edition 2 on Host "ansibletest":

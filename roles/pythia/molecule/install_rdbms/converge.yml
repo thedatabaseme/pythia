@@ -1,0 +1,12 @@
+---
+- name: Converge
+  hosts: all
+
+  vars:
+    oracle_version: 21EE
+    oracle_sid: ORA21
+    sga_max_size: 2
+    runinstaller_parameters: " -ignoreInternalDriverError"
+
+  roles:
+    - pythia

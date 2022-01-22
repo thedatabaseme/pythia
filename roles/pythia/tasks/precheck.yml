@@ -64,56 +64,56 @@
 
 - name: Check if Datapump Source and Target Variables are defined
   fail:
-    msg: "You defined that a Datapump Export / Import should be made, but not all needed variables are defined in either datapump_source_host, datapump_target_host, datapump_source_sid, datapump_target_sid variable!"
-  when: (datapump_source_host|length == 0) or (datapump_target_host|length == 0) or (datapump_source_sid|length == 0) or (datapump_target_sid|length == 0) or (datapump_source_user|length == 0) or (datapump_target_user|length == 0)
+    msg: "You defined that a Datapump Export / Import should be made, but not all needed variables are defined in either datapump_source_host, datapump_target_host, datapump_source_sid, datapump_target_sid variable!"  # noqa line-length
+  when: (datapump_source_host|length == 0) or (datapump_target_host|length == 0) or (datapump_source_sid|length == 0) or (datapump_target_sid|length == 0) or (datapump_source_user|length == 0) or (datapump_target_user|length == 0)  # noqa line-length
   tags:
     - datapump
 
 - name: Check if Datapump Schema List is defined
   fail:
-    msg: "You specified, that a non FULL Datapump Export / Import should be made. But you haven't defined the datapump_schema_list Variable with a List of Schemas you want to transfer!"
+    msg: "You specified, that a non FULL Datapump Export / Import should be made. But you haven't defined the datapump_schema_list Variable with a List of Schemas you want to transfer!"  # noqa line-length
   when: (not datapump_full|bool ) and (datapump_schema_list|length == 0)
   tags:
     - datapump
 
 - name: Check if Datapump Table exist Action is valid
   fail:
-    msg: "You specified a custom TABLE_EXIST_ACTION via the Variable datapump_table_exists_action. The Value provided is not in the range of APPEND, REPLACE, SKIP or TRUNCATE!"
-  when: (datapump_table_exists_action|length == 0) or (('APPEND' not in datapump_table_exists_action) and ('REPLACE' not in datapump_table_exists_action) and ('SKIP' not in datapump_table_exists_action) and ('TRUNCATE' not in datapump_table_exists_action))
+    msg: "You specified a custom TABLE_EXIST_ACTION via the Variable datapump_table_exists_action. The Value provided is not in the range of APPEND, REPLACE, SKIP or TRUNCATE!"  # noqa line-length
+  when: (datapump_table_exists_action|length == 0) or (('APPEND' not in datapump_table_exists_action) and ('REPLACE' not in datapump_table_exists_action) and ('SKIP' not in datapump_table_exists_action) and ('TRUNCATE' not in datapump_table_exists_action))  # noqa line-length
   tags:
     - datapump
 
 - name: Check if Datapump Password for Source Database is defined in Password Vault
   fail:
-    msg: "You need to specify the Password of your Source Database you want to Export / Import into the Password Vault File vault.yml as vault_datapump_{{ datapump_source_sid }}"
+    msg: "You need to specify the Password of your Source Database you want to Export / Import into the Password Vault File vault.yml as vault_datapump_{{ datapump_source_sid }}"  # noqa line-length
   when: "(vault_datapump_{{ datapump_source_sid }}| length == 0)"
   tags:
     - datapump
 
 - name: Check if Datapump Password for Target Database is defined in Password Vault
   fail:
-    msg: "You need to specify the Password of your Target Database you want to Export / Import into the Password Vault File vault.yml as vault_datapump_{{ datapump_target_sid }}"
+    msg: "You need to specify the Password of your Target Database you want to Export / Import into the Password Vault File vault.yml as vault_datapump_{{ datapump_target_sid }}"  # noqa line-length
   when: "(vault_datapump_{{ datapump_target_sid }}| length == 0)"
   tags:
     - datapump
 
 - name: Check if Duplicate Source and Target Variables are defined
   fail:
-    msg: "You defined that a Duplicate should be made, but not all needed variables are defined in either duplicate_source_host, duplicate_target_host, duplicate_source_sid, duplicate_target_sid variable!"
+    msg: "You defined that a Duplicate should be made, but not all needed variables are defined in either duplicate_source_host, duplicate_target_host, duplicate_source_sid, duplicate_target_sid variable!"  # noqa line-length
   when: (duplicate_source_host|length == 0) or (duplicate_target_host|length == 0) or (duplicate_source_sid|length == 0) or (duplicate_target_sid|length == 0)
   tags:
     - duplicate
 
 - name: Check if Parameter preserve Mode is are valid
   fail:
-    msg: "You defined that a Duplicate should be made, but an invalid value for the Parameter preserve Mode has been selected in duplicate_preserve_parameter variable! Can be either source, target or template!"
+    msg: "You defined that a Duplicate should be made, but an invalid value for the Parameter preserve Mode has been selected in duplicate_preserve_parameter variable! Can be either source, target or template!"  # noqa line-length
   when: (duplicate_preserve_parameter|length == 0) or (('source' not in duplicate_preserve_parameter) and ('target' not in duplicate_preserve_parameter))
   tags:
     - duplicate
 
 - name: Check if SYS Password is defined in Password Vault
   fail:
-    msg: "You need to specify the SYS Password of your Source Database you want to duplicate into the Password Vault File vault.yml as vault_sys_{{ duplicate_source_sid }}"
+    msg: "You need to specify the SYS Password of your Source Database you want to duplicate into the Password Vault File vault.yml as vault_sys_{{ duplicate_source_sid }}"  # noqa line-length
   when: "(vault_sys_{{ duplicate_source_sid }}| length == 0)"
   tags:
     - duplicate

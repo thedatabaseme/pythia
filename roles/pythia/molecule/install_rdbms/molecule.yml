@@ -1,0 +1,35 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: oel
+    image: robertdebock/oraclelinux
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    capabilities:
+      - SYS_ADMIN
+    command: "/usr/sbin/init"
+    pre_build_image: true
+provisioner:
+  name: ansible
+  ansible_args:
+    - --tags=rdbms
+    - --become-method=su
+verifier:
+  name: ansible
+scenario:
+  test_sequence:
+    - destroy
+#    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy
