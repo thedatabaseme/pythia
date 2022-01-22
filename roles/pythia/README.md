@@ -44,7 +44,7 @@ main.yml Variables (can be set when calling the playbook, see Examples):
   - oracle_home_dir (Default /home/{{ oracle_user }}: Home Directory of the Oracle OS User
   - local_stage_directory (Default /mnt/oracle_stage): Software Stage Directory on the Ansible Control Server
   - remote_stage_directory (Default /oracle/sources): Software Stage Directory on the Target Server. E.G. Patches are staged here before applying it to a RDBMS or Database
-  - local_sql_stage_directory (Default roles/pythia/files/default): Stage Directory for SQL Scripts on Ansible Control Server.
+  - local_sql_stage_directory (Default {{ role_path }}/files/default): Stage Directory for SQL Scripts on Ansible Control Server.
   - remote_sql_stage_directory (Default {{ remote_stage_directory }}/scripts): Stage Directory for SQL Scripts on Target Server.
   - oracle_version (Default 19EE): The Version of the RDBMS and Database you want to deploy or change. The Version String has to be existant within the RDBMS Dictionary (rdbms_dict.yml under vars folder)
   - client_version (Default 19CLNT): The Version of the Oracle Client you want to deploy. The Version String has to be existant within the Client Dictionary (client_dict.yml under vars folder)
