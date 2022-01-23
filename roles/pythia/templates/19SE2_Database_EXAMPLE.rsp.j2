@@ -42,6 +42,11 @@
          <initParam name="nls_language" value="AMERICAN"/>
          <initParam name="nls_length_semantics" value="{{ nls_length_semantics }}"/>
          <initParam name="pga_aggregate_target" value="{{ pga_aggregate_target }}" unit="GB"/>
+        {% if sid_parameters[oracle_sid|string].parameters.items is defined %}
+          {% for parameter, value in sid_parameters[oracle_sid|string].parameters.items() %}
+         <initParam name="{{ parameter }}" value="{{ value }}"/>
+          {% endfor %}
+        {% endif %}
       </InitParams>
       <MiscParams>
          <customSGA>false</customSGA>

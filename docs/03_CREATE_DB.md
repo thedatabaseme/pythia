@@ -22,6 +22,22 @@ During the Prerequisite Check that Pythia does everytime you let her go, the acc
 |oracle_version |The Version of the RDBMS and Database you want to deploy or change.<br>The Version String has to be existant within the RDBMS Dictionary (`rdbms_dict.yml` under vars folder)|`19EE`|
 |oracle_sid|The SID of the Oracle Database you want to install. Only needed when starting <br>the playbook with the `db` tag, for creating a Database|`NONE`|
 
+### Optional SID parameters
+You can specify a list of database parameters that should get set during dbca DB creation by specifying them with the according SID name in a `sid_parameters.yml` (see *sid_parameters_EXAMPLE.yml*).
+For instance, if you plan to adjust the parameters `filesystemio_options` and `fast_start_mttr_target` when a database `ORA21` is getting created, your `sid_parameters.yml` should look like this.
+
+```
+sid_parameters:
+  ORA21:
+    parameters:
+      FILESYSTEMIO_OPTIONS: setall
+      FAST_START_MTTR_TARGET: 150
+```
+
+You are able to specify parameters for multiple instances in one file.
+
+> :warning: Defining the same parameters multiple times with conflicting values will lead to unknown behavior during the DB creation. Please check the dbca templates under the templates directory to understand, which parameters are set there.
+
 ### Optional Variables
 
 

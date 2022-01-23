@@ -464,10 +464,10 @@
     - db
     - rdbms
 
-#- debug:
-#    var: check_selinux_configuration
-#  tags:
-#    - always
+# - debug:
+#     var: check_selinux_configuration
+#   tags:
+#     - always
 
 # We only fail here for rdbms and db TAG. Not for autostart. The
 # reason is, that an autostart will get effective on the next reboot
@@ -493,10 +493,10 @@
     - db
     - rdbms
 
-#- debug:
-#    var: selinux_configuration_change
-#  tags:
-#    - always
+# - debug:
+#     var: selinux_configuration_change
+#   tags:
+#     - always
 
 # ####################################################################
 # Regarding SELinux

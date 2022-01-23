@@ -82,6 +82,22 @@ All other Variables in here are referenced in the respective Responsefile for th
   - archive_dest: Specifies the Location of the Archived Redo Logs. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
   - audit_dest: Specifies the Location of the Audit Files. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
 
+sid_parameters.yml
+---------------
+There is no need to adapt the `dbca` template if you want to get an additional parameter included during DB creation. For this, you can use the `sid_parameters.yml` under the `vars` folder. There is an *sid_parameters_EXAMPLE.yml* file which shows you an example content. It is not mandatory, that this file exists, it will only get included, when it's existing and only when using the `db` TAG. In the `sid_parameters.yml` you can specify a dictionary of parameters you want to specify per SID. For instance, if you plan to adjust the parameters `filesystemio_options` and `fast_start_mttr_target` when a database `ORA21` is getting created, your `sid_parameters.yml` should look like this.
+
+```
+sid_parameters:
+  ORA21:
+    parameters:
+      FILESYSTEMIO_OPTIONS: setall
+      FAST_START_MTTR_TARGET: 150
+```
+
+You are able to specify parameters for multiple instances in one file.
+
+> :warning: Defining the same parameters multiple times with conflicting values will lead to unknown behavior during the DB creation. Please check the dbca templates under the templates directory to understand, which parameters are set there.
+
 Templates
 ===============
 

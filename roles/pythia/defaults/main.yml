@@ -16,7 +16,7 @@
 #  - selinux_desired_state (Default permissive): There are some known problems with SELinux set
 #    to enforcing and Oracle Databases. selinux_desired_state controls the state which SELinux
 #    should get set by Pythia. Can be set to permissive, enforcing and disabled. Most likely a
-#    reboot is required when altering the state. You may need to set the reboot_ack parameter 
+#    reboot is required when altering the state. You may need to set the reboot_ack parameter
 #    when calling the playbook.
 #  - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only
 #    needed when starting the playbook with the "db" tag, for creating a Database.
