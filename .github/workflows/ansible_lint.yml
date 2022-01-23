@@ -1,6 +1,10 @@
 name: Ansible Lint  # feel free to pick your own name
 
-on: [pull_request]
+on: 
+  push:
+    branches:
+      - develop
+  pull_request:
 
 jobs:
   build:
