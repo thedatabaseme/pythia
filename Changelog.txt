@@ -1,8 +1,5 @@
 Changelog of Pythia:
 
-Version 2.2.6
-  - Fixed #26: dbstart and dbshut scripts are created with 0755 mode now.
-
 Version 2.2.5
   - New Feature #19: Automatic linting is now done using Github Actions. Fixed many (really many) linting errors and refactored lots of code
   - New Feature #20: Added Molecule test scenarios in Pythia
