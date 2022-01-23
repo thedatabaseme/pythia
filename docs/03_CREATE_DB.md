@@ -8,7 +8,7 @@ We highly recommend, to also specify the `hugepage` TAG when creating a Database
 During the Prerequisite Check that Pythia does everytime you let her go, the according Prerequisites will be implemented. When specifying the `db` TAG, the following will be done during the prerequisite phase.
 
   - Check and set all needed Kernel Parameter (Shared Memory Configuration and also Hugepages if you specified the TAG `hugepage`)
-  - Restarts the System to disable Transparent Hugepages (when `hugepage` TAG is specified and you acknowledged the Reboot)
+  - Restarts the System to disable Transparent Hugepages (when `hugepage` TAG is specified and you acknowledged the Reboot (`reboot_ack=true`))
   - Set the Security Limits (`ulimit`) of the System
   - Setup an Environment Script for the Oracle OS User which will be executed when you `su` to the Oracle User
 
@@ -40,6 +40,13 @@ During the Prerequisite Check that Pythia does everytime you let her go, the acc
 |listener_logging|Specifies if a created listener will be configured to log or not. Can be either `OFF` or `ON`.|`OFF`|
 |emexpress|Specifies if the EM Express should be installed / configured when creating a Database. <br>There are two valid values for this Variable: `DBEXPRESS` and `NONE`|`DBEXPRESS`|
 |autoextend|Specifies if the created Datafiles should be autoextensible or not|`FALSE`|
+|selinux_desired_state|There are some known problems with SELinux set to enforcing and Oracle Databases.<br>`selinux_desired_state` controls the state which SELinux should get set by Pythia.<br> Can be set to `permissive`, `enforcing` and `disabled`. Eventually a reboot is required<br>when altering the state. You may need to set the reboot_ack parameter when calling<br>the playbook.|`permissive`|
+
+<br>
+
+> :warning: SELinux can be tricky. We recommend to use the default setting (`permissive`). If your system is set to `enforcing`, a reboot will be required. Pythia will do the reboot for you, but you need to also acknowledge the reboot by the `reboot_ack=true` flag in the playbook call (see `hugepage` TAG in the [README.md](https://github.com/thedatabaseme/pythia/blob/master/README.md))
+
+<br>
 
 ## Examples
 
