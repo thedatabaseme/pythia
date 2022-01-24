@@ -1,4 +1,4 @@
-ORACLE_BASE=/oracle; export ORACLE_BASE
+ORACLE_BASE={{ rdbms[oracle_version|string].oracle_base | default("/oracle") }}; export ORACLE_BASE
 if [ -s $HOME/ora_hostname ]
 then
 	ORACLE_HOSTNAME=$(cat $HOME/ora_hostname); export ORACLE_HOSTNAME
@@ -11,37 +11,11 @@ ECHO="echo -e"; export ECHO
 ORAVERS=19.3.0.0
 SCRIPT="ora_set.sh"
 OS=$(uname -s)
-if [ "$OS" == "SunOS" ]
-then
-	ARCH=$(uname -p)
-	#/usr/bin/egrep
-	PATH=/usr/ccs/bin:$PATH:/usr/sfw/bin; export PATH
-	ORATAB=/var/opt/oracle/oratab; export ORATAB
-	AWK=$(which nawk)
-	GGREP=$(which ggrep | awk '$0!~/alias/ {print $1}')
-	if [ -f $GGREP ]
-	then
-		WGREP="$GGREP -w"
-	else
-		${ECHO} "!!! GNU grep not found !!!"
-		${ECHO} "\tsome functions may work not correct !!!\n"
-		WGREP="$(which grep | awk '$0!~/alias/ {print $1}')"
-	fi
-	EGREP=$(which egrep | awk '$0!~/alias/ {print $1}')
-	if [ ! -f $EGREP ]
-	then 
-		${ECHO} "!!! egrep not found !!!"
-		${ECHO} "\tsome functions may work not correct !!!\n"
-		EGREP="$(which grep | awk '$0!~/alias/ {print $1}')"
-	fi
-	ulimit -s 32768
-	ulimit -n 4096
-else
-	ORATAB=/etc/oratab; export ORATAB
-	EGREP=$(which egrep | awk '$0!~/alias/ {print $1}')
-	WGREP="$(which grep | awk '$0!~/alias/ {print $1}') -w"
-	AWK=$(which awk)
-fi
+
+ORATAB=/etc/oratab; export ORATAB
+EGREP=$(which egrep | awk '$0!~/alias/ {print $1}')
+WGREP="$(which grep | awk '$0!~/alias/ {print $1}') -w"
+AWK=$(which awk)
 
 case $# in 
 	1 ) 
@@ -212,35 +186,12 @@ fi
 FULLVERS=""
 if [ "${DBSTATUS}" == "RUNNING" ]
 then
-	FULLVERS="$(echo "exit" | sqlplus -S / as sysdba <<EOF
-set heading off
-set lines 200
-select BANNER_FULL from all_registry_banners where BANNER_FULL like '%Oracle Database Catalog%';
-EOF
-)"
+	FULLVERS="$(echo "exit" | sqlplus / as sysdba)"
 	DBVERS=$(echo $FULLVERS | awk -F"Version" '{print $2}' | cut -d"." -f1-4); export DBVERS
 	DBREL=$(echo $DBVERS | cut -d"." -f1); export DBREL
 	##### check for DIOGNOSTIC_DEST ans set some variables and aliases
-	DIAG=""
-	DIAGOLD="/db_data/$ORACLE_SID/dump/diag/diag/rdbms/$DBNAME/$ORACLE_SID/trace"
-	DIAGNEW="/db_data/$ORACLE_SID/dump/diag/rdbms/$DBNAME/$ORACLE_SID/trace"
-	if [ -d ${DIAGNEW} ]
-	then
-		DIAG="$DIAGNEW"; export DIAG
-	else
-		if [ -d ${DIAGOLD} ]
-		then
-			DIAG="$DIAGOLD"; export DIAG
-		else
-			DIAGSQL="$(echo "exit" | sqlplus -S / as sysdba <<EOF
-set heading off
-set lines 200
-select * from v\$diag_info where NAME = 'Diag Trace';
-EOF
-)"
-			DIAG=$(echo $DIAGSQL | awk '$2~/Diag/ {print $4;}'); export DIAG
-		fi
-	fi
+	DIAG="{{ diag_dest }}/diag/rdbms/$DBNAME/$ORACLE_SID/trace"; export DIAG
+
 	if [ -z "${DIAG}" ]
 	then
 		${ECHO} "\n\t\t !!! DIAGNOSTIC_DEST not found => omit variable ALOG and some aliases !!!"
