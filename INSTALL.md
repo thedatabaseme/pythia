@@ -7,6 +7,11 @@ General
 You will need to provide several Files to ensure, that Pythia will work correctly. All Files you need to create are listed in this Instruction. These files can and should be changed by you, to fulfill your needs for installing and maintaining an Oracle Database. You may want to adapt all Variables or Templates to meet your or your companies requirements. Hence you want to change the Folder Structure to fulfill your needs.
 For every File that needs to exist, there is an *EXAMPLE* file in the respective directory. If you want to, you can copy the *EXAMPLE* file (and remove the EXAMPLE from the filename) and Pythia will work. This is not the recommended way however.
 
+Stage Directory
+===============
+
+Some tasks of Pythia relate on a so called "local stage directory". In this directory, Pythia searches for the software archives of the Oracle Database. The location of the stage directory is controlled by the variable `local_stage_directory` under `vars/main.yml`. You have to be aware, that Pythia searches for this directory on the Ansible Controlhost. By default, the location is `/mnt/oracle_stage`. You still can control the specific location of a software archive in the `rdbms_dict.yml` and `patch_dict.yml`. But the location can only be underneath the `local_stage_directory`.
+
 Variables
 ===============
 
