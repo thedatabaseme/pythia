@@ -34,6 +34,12 @@ Requirements
 
 Pythia requires you to run Ansible 2.9 or higher. The Oracle Software you want to install / configure by Pythia has to be located on a "Staging Area" mounted on the Control Server. Keep in Mind, that you need to licence Oracle Software separately!
 
+The following collections / modules are needed (limited on some TAGs). Pythia will automatically download needed collections:
+
+| Collection / Module | TAGs                 |
+|---------------------|----------------------|
+| ansible.posix       | `db`, `rdbms`, `autostart` |
+
 Installation and Configuration
 ------------------------------
 
@@ -92,7 +98,7 @@ Example: Install additional Software named "DEMO" on the target system (defined 
     - ansible-playbook /etc/ansible/pythia/pythia.yml -e "HOSTS=ansibletest" --tags "rpm" -e "install_rpm=DEMO" -k -K -u <username>
 
 Example: Install Oracle RDBMS with Version 19c and Enterprise Edition on Host "ansibletest", install the 19.5 RU (Patch ID: 30125133). Build a Database named "ORA19" on top, which will use Hugepages and a SGA Size of 16GB:
-Attention! Configuring Hugepages will most likely lead to a system reboot. Therefore the reboot_ack switch has to be set when calling the playbook.
+Attention! Configuring Hugepages will most likely lead to a system reboot. Therefore the `reboot_ack` switch has to be set when calling the playbook.
 
     - ansible-playbook /etc/ansible/pythia/pythia.yml -e "HOSTS=ansibletest" --tags "rdbms, db, patch, hugepage" -e "oracle_sid=ORA19 oracle_version=19EE install_patch=30125133 reboot_ack=true sga_max_size=16" -k -K -u <username>
 

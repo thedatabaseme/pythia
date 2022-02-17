@@ -1,7 +1,7 @@
 ---
 # ####################################################################
 # Main Task File for Pythia
-# Version 2.2.5
+# Version 2.3.0
 # Author: thedatabaseme / Philip Haberkern
 # For more Details view README.md
 # ####################################################################
@@ -15,6 +15,16 @@
     file: vars/sid_directories.yml
   tags:
     - always
+
+# We're ignoring the error if no parameters file exist. Because this
+# might be a wanted behavior
+
+- name: Include SID Parameters
+  include_vars:
+    file: vars/sid_parameters.yml
+  failed_when: false
+  tags:
+    - db
 
 - name: Include Patch Dictionary
   include_vars:
@@ -46,6 +56,20 @@
   tags:
     - duplicate
     - datapump
+
+##################################################################################
+#    ////////////////////////// Requirements //////////////////////////
+##################################################################################
+
+- name: Download required collections
+  command: ansible-galaxy collection install -r {{ role_path }}/requirements.yml
+  changed_when: true
+  delegate_to: localhost
+  become: false
+  tags:
+    - autostart
+    - db
+    - rdbms
 
 # ####################################################################
 #                             Set Facts

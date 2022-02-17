@@ -13,6 +13,11 @@
 #    (client_dict.yml under vars folder)
 #  - runinstaller_parameters (Default NULL): Additional runinstaller parameters during installation
 #    of Oracle software. For example " -ignoreInternalDriverError".
+#  - selinux_desired_state (Default permissive): There are some known problems with SELinux set
+#    to enforcing and Oracle Databases. selinux_desired_state controls the state which SELinux
+#    should get set by Pythia. Can be set to permissive, enforcing and disabled. Most likely a
+#    reboot is required when altering the state. You may need to set the reboot_ack parameter
+#    when calling the playbook.
 #  - oracle_sid (Default NULL): The SID of the Oracle Database you want to install. Only
 #    needed when starting the playbook with the "db" tag, for creating a Database.
 #  - oracle_pdb_name (Default NULL): Name of the Plugable Database you want to get created
@@ -143,6 +148,7 @@ sysctl_stable: true
 client_version: 19CLNT
 client_install_type: "Administrator"
 runinstaller_parameter: ""
+selinux_desired_state: "permissive"
 
 # Control Variables for Upgrade
 oracle_source_version: 18EE

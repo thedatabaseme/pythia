@@ -1,7 +1,18 @@
 Changelog of Pythia:
 
+Version 2.3.0
+  - New Feature #25: You can now specify a list of instance parameters which will get set
+    when a database is getting created. See docs/CREATE_DB.md
+  - Fixed #26: Autostart scripts dbstart and dbshut will now get deployed with the correctl
+    permission
+  - New Feature #27: Pythia will now configure SELinux according to the parameter set by
+    selinux_desired_state (default permissive)
+  - Fixed #32: The shell script that is getting executed when su to the oracle OS user
+    now shows the correct version in any case
+
 Version 2.2.5
-  - New Feature #19: Automatic linting is now done using Github Actions. Fixed many (really many) linting errors and refactored lots of code
+  - New Feature #19: Automatic linting is now done using Github Actions. Fixed many (really many)
+    linting errors and refactored lots of code
   - New Feature #20: Added Molecule test scenarios in Pythia
   - New Feature #21: You can now specify additional runInstaller parameters by using the runinstaller_parameters variable
   - Fixed #23: Pythia now uses dynamic generated variable role_path when working with templates and files.

@@ -406,9 +406,9 @@
     - prepare
     - db
 
-- name: Check if needed Reboot is acknowledged for Hugepage Configuration
+- name: Check if needed Reboot is acknowledged for Hugepage configuration
   fail:
-    msg: "Configuration of Hugepages needs a Reboot. But you don't have acknowledged this by setting reboot_ack=TRUE"
+    msg: "Configuration of Hugepages needs a reboot. But you don't have acknowledged this by setting reboot_ack=TRUE"
   when: ((not reboot_ack | bool) and (reboot_required | bool))
   tags:
     - hugepage
@@ -449,13 +449,72 @@
     - hugepage
     - converttohugepage
 
+# SELinux configuration
+
+- name: Check current SELinux state
+  ansible.posix.selinux:
+    policy: targeted
+    state: "{{ selinux_desired_state }}"
+  check_mode: true
+  changed_when: false
+  register: check_selinux_configuration
+  become: true
+  tags:
+    - autostart
+    - db
+    - rdbms
+
+# - debug:
+#     var: check_selinux_configuration
+#   tags:
+#     - always
+
+# We only fail here for rdbms and db TAG. Not for autostart. The
+# reason is, that an autostart will get effective on the next reboot
+# of the system anyway.
+
+- name: Check if needed Reboot is acknowledged for changed SELinux configuration
+  fail:
+    msg: "Configuration of SELinux needs a reboot. But you don't have acknowledged this by setting reboot_ack=TRUE"
+  when: ((not reboot_ack | bool) and (check_selinux_configuration.reboot_required | default(false) | bool))
+  tags:
+    - db
+    - rdbms
+
+- name: Set desired SELinux state of {{ selinux_desired_state }}
+  ansible.posix.selinux:
+    policy: targeted
+    state: "{{ selinux_desired_state }}"
+  register: selinux_configuration_change
+  become: true
+  when: '("SELinux state changed" in check_selinux_configuration.msg)'
+  tags:
+    - autostart
+    - db
+    - rdbms
+
+# - debug:
+#     var: selinux_configuration_change
+#   tags:
+#     - always
+
+# ####################################################################
+# Regarding SELinux
+# We only reboot here for rdbms and db TAG. Not for autostart. The
+# reason is, that an autostart will get effective on the next reboot
+# of the system anyway.
+# TAG: db, rdbms, hugepage, converttohugepage
+# ####################################################################
+
 - name: Reboot
   become: true
   reboot:
     post_reboot_delay: 120
     msg: Rebooting for Hugepage Configuration
-  when: reboot_required | bool
+  when: ((reboot_required|bool) or (selinux_configuration_change.reboot_required | default(false) | bool)) and (reboot_ack|bool)
   tags:
+    - db
+    - rdbms
     - hugepage
     - converttohugepage
 

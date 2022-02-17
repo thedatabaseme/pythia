@@ -8,7 +8,7 @@ We highly recommend, to also specify the `hugepage` TAG when creating a Database
 During the Prerequisite Check that Pythia does everytime you let her go, the according Prerequisites will be implemented. When specifying the `db` TAG, the following will be done during the prerequisite phase.
 
   - Check and set all needed Kernel Parameter (Shared Memory Configuration and also Hugepages if you specified the TAG `hugepage`)
-  - Restarts the System to disable Transparent Hugepages (when `hugepage` TAG is specified and you acknowledged the Reboot)
+  - Restarts the System to disable Transparent Hugepages (when `hugepage` TAG is specified and you acknowledged the Reboot (`reboot_ack=true`))
   - Set the Security Limits (`ulimit`) of the System
   - Setup an Environment Script for the Oracle OS User which will be executed when you `su` to the Oracle User
 
@@ -21,6 +21,22 @@ During the Prerequisite Check that Pythia does everytime you let her go, the acc
 |---------------|--------------------------|---------------|
 |oracle_version |The Version of the RDBMS and Database you want to deploy or change.<br>The Version String has to be existant within the RDBMS Dictionary (`rdbms_dict.yml` under vars folder)|`19EE`|
 |oracle_sid|The SID of the Oracle Database you want to install. Only needed when starting <br>the playbook with the `db` tag, for creating a Database|`NONE`|
+
+### Optional SID parameters
+You can specify a list of database parameters that should get set during dbca DB creation by specifying them with the according SID name in a `sid_parameters.yml` (see *sid_parameters_EXAMPLE.yml*).
+For instance, if you plan to adjust the parameters `filesystemio_options` and `fast_start_mttr_target` when a database `ORA21` is getting created, your `sid_parameters.yml` should look like this.
+
+```
+sid_parameters:
+  ORA21:
+    parameters:
+      FILESYSTEMIO_OPTIONS: setall
+      FAST_START_MTTR_TARGET: 150
+```
+
+You are able to specify parameters for multiple instances in one file.
+
+> :warning: Defining the same parameters multiple times with conflicting values will lead to unknown behavior during the DB creation. Please check the dbca templates under the templates directory to understand, which parameters are set there.
 
 ### Optional Variables
 
@@ -40,6 +56,13 @@ During the Prerequisite Check that Pythia does everytime you let her go, the acc
 |listener_logging|Specifies if a created listener will be configured to log or not. Can be either `OFF` or `ON`.|`OFF`|
 |emexpress|Specifies if the EM Express should be installed / configured when creating a Database. <br>There are two valid values for this Variable: `DBEXPRESS` and `NONE`|`DBEXPRESS`|
 |autoextend|Specifies if the created Datafiles should be autoextensible or not|`FALSE`|
+|selinux_desired_state|There are some known problems with SELinux set to enforcing and Oracle Databases.<br>`selinux_desired_state` controls the state which SELinux should get set by Pythia.<br> Can be set to `permissive`, `enforcing` and `disabled`. Eventually a reboot is required<br>when altering the state. You may need to set the reboot_ack parameter when calling<br>the playbook.|`permissive`|
+
+<br>
+
+> :warning: SELinux can be tricky. We recommend to use the default setting (`permissive`). If your system is set to `enforcing`, a reboot will be required. Pythia will do the reboot for you, but you need to also acknowledge the reboot by the `reboot_ack=true` flag in the playbook call (see `hugepage` TAG in the [README.md](https://github.com/thedatabaseme/pythia/blob/master/README.md))
+
+<br>
 
 ## Examples
 

@@ -74,7 +74,7 @@
     dest: "{{ oracle_home }}/bin/dbstart"
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
-    mode: 0750
+    mode: 0755
     force: true
   become: true
   become_user: "{{ oracle_user }}"
@@ -87,7 +87,7 @@
     dest: "{{ oracle_home }}/bin/dbshut"
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
-    mode: 0750
+    mode: 0755
     force: true
   become: true
   become_user: "{{ oracle_user }}"

@@ -1,0 +1,9 @@
+sid_parameters:
+  ORA21:
+    parameters:
+      FILESYSTEMIO_OPTIONS: setall
+      FAST_START_MTTR_TARGET: 150
+  ORA19:
+    parameters:
+      log_archive_dest_2: "/second/archive/location"
+      job_queue_processes: 2
