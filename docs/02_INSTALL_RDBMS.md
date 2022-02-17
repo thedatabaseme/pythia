@@ -16,7 +16,7 @@ During the Prerequisite Check that Pythia does everytime you let her go, the acc
 
 | Variable Name | Description              | Default Value |
 |---------------|--------------------------|---------------|
-|oracle_version |The Version of the RDBMS and Database you want to deploy or change.<br>The Version String has to be existant within the RDBMS Dictionary (`rdbms_dict.yml` under vars folder)|`19EE`|
+|oracle_version |The Version of the RDBMS and Database you want to deploy or change.<br>The Version String has to be existant within the RDBMS Dictionary<br>(`rdbms_dict.yml` under vars folder)|`19EE`|
 
 Please also check the `vars/rdbms_dict.yml` and set the following Variables as you need. DON'T specify them in your Playbook Call.
 
@@ -36,7 +36,15 @@ Please also check the `vars/rdbms_dict.yml` and set the following Variables as y
 
 | Variable Name | Description              | Default Value |
 |---------------|--------------------------|---------------|
-|runinstaller_parameters|Additional runinstaller parameters during installation<br>of Oracle software. For example `-ignoreInternalDriverError`.|`NONE`|
+|runinstaller_parameters|Additional runinstaller parameters during installation of Oracle software. For example<br>`-ignoreInternalDriverError`.|`NONE`|
+|selinux_desired_state|There are some known problems with SELinux set to enforcing and Oracle Databases.<br>`selinux_desired_state` controls the state which SELinux should get set by Pythia.<br> Can be set to `permissive`, `enforcing` and `disabled`. Eventually a reboot is required<br>when altering the state. You may need to set the reboot_ack parameter when calling<br>the playbook.|`permissive`|
+
+<br>
+
+> :warning: SELinux can be tricky. We recommend to use the default setting (`permissive`). If your system is set to `enforcing`, a reboot will be required. Pythia will do the reboot for you, but you need to also acknowledge the reboot by the `reboot_ack=true` flag in the playbook call (see `hugepage` TAG in the [README.md](https://github.com/thedatabaseme/pythia/blob/master/README.md))
+
+<br>
+
 ## Examples
 
 Example: Install Oracle RDBMS with Version 18c as Standard Edition 2 on Host "ansibletest":

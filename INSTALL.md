@@ -7,6 +7,11 @@ General
 You will need to provide several Files to ensure, that Pythia will work correctly. All Files you need to create are listed in this Instruction. These files can and should be changed by you, to fulfill your needs for installing and maintaining an Oracle Database. You may want to adapt all Variables or Templates to meet your or your companies requirements. Hence you want to change the Folder Structure to fulfill your needs.
 For every File that needs to exist, there is an *EXAMPLE* file in the respective directory. If you want to, you can copy the *EXAMPLE* file (and remove the EXAMPLE from the filename) and Pythia will work. This is not the recommended way however.
 
+Stage Directory
+===============
+
+Some tasks of Pythia relate on a so called "local stage directory". In this directory, Pythia searches for the software archives of the Oracle Database. The location of the stage directory is controlled by the variable `local_stage_directory` under `vars/main.yml`. You have to be aware, that Pythia searches for this directory on the Ansible Controlhost. By default, the location is `/mnt/oracle_stage`. You still can control the specific location of a software archive in the `rdbms_dict.yml` and `patch_dict.yml`. But the location can only be underneath the `local_stage_directory`.
+
 Variables
 ===============
 
@@ -81,6 +86,22 @@ All other Variables in here are referenced in the respective Responsefile for th
   - redo_dest1, redo_dest2: Specifies the Location of the Online Redo Logs. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
   - archive_dest: Specifies the Location of the Archived Redo Logs. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
   - audit_dest: Specifies the Location of the Audit Files. This Variable is referenced in the DBCA Templates (*_Database.rsp.j2)
+
+sid_parameters.yml
+---------------
+There is no need to adapt the `dbca` template if you want to get an additional parameter included during DB creation. For this, you can use the `sid_parameters.yml` under the `vars` folder. There is an *sid_parameters_EXAMPLE.yml* file which shows you an example content. It is not mandatory, that this file exists, it will only get included, when it's existing and only when using the `db` TAG. In the `sid_parameters.yml` you can specify a dictionary of parameters you want to specify per SID. For instance, if you plan to adjust the parameters `filesystemio_options` and `fast_start_mttr_target` when a database `ORA21` is getting created, your `sid_parameters.yml` should look like this.
+
+```
+sid_parameters:
+  ORA21:
+    parameters:
+      FILESYSTEMIO_OPTIONS: setall
+      FAST_START_MTTR_TARGET: 150
+```
+
+You are able to specify parameters for multiple instances in one file.
+
+> :warning: Defining the same parameters multiple times with conflicting values will lead to unknown behavior during the DB creation. Please check the dbca templates under the templates directory to understand, which parameters are set there.
 
 Templates
 ===============

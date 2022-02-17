@@ -182,6 +182,15 @@
   tags:
     - db
 
+- name: Check if desired SELinux state is valid
+  fail:
+    msg: "The Value of Variable selinux_desired_state must be either permissive or enforcing or disabled!"
+  when: ('permissive' not in selinux_desired_state) and ('enforcing' not in selinux_desired_state) and ('disabled' not in selinux_desired_state)
+  tags:
+    - db
+    - autostart
+    - rdbms
+
 ###################################################################################
 # Check if the specified Variables are present in the according Dictionary
 # Tag: rdbms, hugepage, patch, patchonly, cleanup, rpm
