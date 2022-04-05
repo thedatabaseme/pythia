@@ -20,8 +20,11 @@
 - name: Check if Target Database is Open
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"select status from v\\$instance;\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"
-  changed_when: false
+#  shell: "echo -e \"select status from v\\$instance;\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"
+  oracle_sql:
+    orahome: "{{ datapump_target_home.stdout }}"
+    sql: "select * from v$instance;"
+#  changed_when: false
   environment:
     ORACLE_HOME: "{{ datapump_target_home.stdout }}"
     ORACLE_SID: "{{ datapump_target_sid }}"
