@@ -78,6 +78,13 @@ def run_module():
     if rc != 0:
         module.fail_json(msg='failed with error:' + err)
 
+    result = dict(
+        changed=True,
+        query_command=cmd,
+        query_result=out,
+        rc=rc
+    )
+
     if module.params['sql'].lower().startswith('select'):
         result['changed']=False
 
@@ -85,12 +92,6 @@ def run_module():
     # simple AnsibleModule.exit_json(), passing the key/value results
     module.exit_json(**result)
 
-    result = dict(
-        changed=True,
-        query_command=cmd,
-        query_result=out,
-        rc=rc
-    )
 
 def main():
     run_module()
