@@ -64,13 +64,6 @@ def run_module():
         sql=dict(type='str', required=True)
     )
 
-    result = dict(
-        changed=True,
-        query_command=cmd,
-        query_result=out,
-        rc=rc
-    )
-
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True
@@ -92,6 +85,12 @@ def run_module():
     # simple AnsibleModule.exit_json(), passing the key/value results
     module.exit_json(**result)
 
+    result = dict(
+        changed=True,
+        query_command=cmd,
+        query_result=out,
+        rc=rc
+    )
 
 def main():
     run_module()
