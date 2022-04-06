@@ -3,6 +3,8 @@ Changelog of Pythia:
 Version 2.3.5
   - New Feature #34: using the shell command with sqlplus has been replaced by the oracle_sql
     module
+  - Fixed #38: Molecule tests now run again by disabling SELinux check when running molecule
+    and updating the meta/main.yml with the needed Ansible Galaxy info.
 
 Version 2.3.0
   - New Feature #25: You can now specify a list of instance parameters which will get set

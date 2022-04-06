@@ -459,6 +459,7 @@
   changed_when: false
   register: check_selinux_configuration
   become: true
+  when: (not molecule_run | bool | default(false))
   tags:
     - autostart
     - db
@@ -487,7 +488,7 @@
     state: "{{ selinux_desired_state }}"
   register: selinux_configuration_change
   become: true
-  when: '("SELinux state changed" in check_selinux_configuration.msg)'
+  when: '((not molecule_run | bool | default(false)) and ("SELinux state changed" in check_selinux_configuration.msg))'
   tags:
     - autostart
     - db

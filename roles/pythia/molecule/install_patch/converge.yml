@@ -5,6 +5,7 @@
   vars:
     oracle_version: 21EE
     install_patch: 33239276
+    molecule_run: true
 
   roles:
     - pythia

@@ -9,6 +9,7 @@
     runinstaller_parameters: " -ignoreInternalDriverError"
     install_patch: "33239276"
     emexpress: NONE
+    molecule_run: true
 
   roles:
     - pythia
