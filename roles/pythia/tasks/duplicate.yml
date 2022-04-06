@@ -65,8 +65,9 @@
 - name: Check if Source Database is Open
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"select status from v\\$instance;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
-  changed_when: false
+  oracle_sql:
+    orahome: "{{ duplicate_source_home.stdout }}"
+    sql: "select status from v\\$instance;"
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_source_sid }}"
@@ -78,7 +79,7 @@
 
 - name: Oracle SID to Duplicate is NOT in OPEN State
   assert:
-    that: '"OPEN" | string in item.stdout'
+    that: '"OPEN" | string in item.query_result'
     fail_msg: The Source Database {{ duplicate_source_sid }} is not in OPEN State.
     success_msg: Oracle SID {{ duplicate_source_sid }} is in OPEN State. Proceed with Duplicate.
   become: true
@@ -200,8 +201,9 @@
 - name: Check if Target Database is Open
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set feedback off; \\n select status from v\\$instance;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
-  changed_when: false
+  oracle_sql:
+    orahome: "{{ duplicate_source_home.stdout }}"
+    sql: "select status from v\\$instance;"
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -213,7 +215,7 @@
 
 - name: Oracle SID on Target System is in OPEN State
   assert:
-    that: '"OPEN" | string not in item.stdout'
+    that: '"OPEN" | string not in item.query_result'
     fail_msg: "The Source Database {{ duplicate_target_sid }} is in OPEN State. If you want to remove it prior to duplication, specify so in the duplicate_remove_target variable!"  # noqa line-length
     success_msg: "Oracle SID {{ duplicate_target_sid }} is not in OPEN State. Proceed with Duplicate."
   become: true
@@ -234,20 +236,21 @@
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
-  register: target_controlfiles
+  register: target_passwords
   with_items:
     - "{{ target_db_status }}"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
-  when: (duplicate_preserve_passwords) and ("OPEN" | string in item.stdout_lines)
+  when: (duplicate_preserve_passwords) and ("OPEN" | string in item.query_result)
   tags:
     - duplicate
 
 - name: Gather Controlfiles from running Target Database
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set lines 500; \\n set feedback off; \\n select value from v\\$parameter where name = 'control_files';\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
-  changed_when: false
+  oracle_sql:
+    orahome: "{{ duplicate_source_home.stdout }}"
+    sql: "select value from v\\$parameter where name = 'control_files';"
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -256,14 +259,16 @@
     - "{{ target_db_status }}"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
-  when: (duplicate_remove_target) and ("OPEN" | string in item.stdout_lines)
+  when: (duplicate_remove_target) and ("OPEN" | string in item.query_result)
   tags:
     - duplicate
 
 - name: Gather Datafiles from running Target Database
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set lines 500; \\n set pages 500; \\n set feedback off; \\n select file_name from dba_data_files;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
+  oracle_sql:
+    orahome: "{{ duplicate_source_home.stdout }}"
+    sql: "select file_name from dba_data_files;"
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -272,14 +277,16 @@
     - "{{ target_db_status }}"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
-  when: (duplicate_remove_target) and ("OPEN" | string in item.stdout)
+  when: (duplicate_remove_target) and ("OPEN" | string in item.query_result)
   tags:
     - duplicate
 
 - name: Gather Tempfiles from running Target Database
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set lines 500; \\n set pages 500; \\n set feedback off; \\n select file_name from dba_temp_files;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
+  oracle_sql:
+    orahome: "{{ duplicate_source_home.stdout }}"
+    sql: "select file_name from dba_temp_files;"
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -288,14 +295,16 @@
     - "{{ target_db_status }}"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
-  when: (duplicate_remove_target) and ("OPEN" | string in item.stdout)
+  when: (duplicate_remove_target) and ("OPEN" | string in item.query_result)
   tags:
     - duplicate
 
 - name: Gather Redologs from running Target Database
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n set lines 500; \\n set pages 500; \\n set feedback off; \\n select member from v\\$logfile;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
+  oracle_sql:
+    orahome: "{{ duplicate_source_home.stdout }}"
+    sql: "select member from v\\$logfile;"
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -304,7 +313,7 @@
     - "{{ target_db_status }}"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
-  when: (duplicate_remove_target) and ("OPEN" | string in item.stdout)
+  when: (duplicate_remove_target) and ("OPEN" | string in item.query_result)
   tags:
     - duplicate
 
@@ -319,7 +328,7 @@
     - "{{ target_db_status }}"
   delegate_to: "{{ duplicate_target_host }}"
   run_once: true
-  when: (duplicate_remove_target) and ("OPEN" | string in item.stdout)
+  when: (duplicate_remove_target) and ("OPEN" | string in item.query_result)
   tags:
     - duplicate
 
@@ -675,7 +684,9 @@
 - name: Shutdown Target Database for restoring the original SPFILE
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"shutdown immediate;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  oracle_sql:
+    orahome: "{{ duplicate_source_home.stdout }}"
+    sql: "shutdown immediate;" 
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
@@ -702,7 +713,9 @@
 - name: Startup Target Database for restoring the original SPFILE
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"startup;\" | {{ duplicate_source_home.stdout }}/bin/sqlplus -s / as sysdba"
+  oracle_sql:
+    orahome: "{{ duplicate_source_home.stdout }}"
+    sql: "startup;" 
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"

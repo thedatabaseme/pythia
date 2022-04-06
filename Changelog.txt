@@ -1,5 +1,9 @@
 Changelog of Pythia:
 
+Version 2.3.5
+  - New Feature #34: using the shell command with sqlplus has been replaced by the oracle_sql
+    module
+
 Version 2.3.0
   - New Feature #25: You can now specify a list of instance parameters which will get set
     when a database is getting created. See docs/CREATE_DB.md

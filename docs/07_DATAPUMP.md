@@ -1,7 +1,5 @@
 # Datapump Export / Import a Database with Pythia
 
-# UPDATE STARTS HERE!
-
 Pythia is able to do a Datapump Export / Import over a NETWORK_LINK (Database Link). You may either do a FULL Export / Import or an Import of a List of Schemas. Pythia also supports you by remapping the schemas.
 
 Be aware, that all restrictions for doing an Export / Import over a Database Link are applying here. More informations can be found [here](https://docs.oracle.com/database/121/SUTIL/GUID-0871E56B-07EB-43B3-91DA-D1F457CF6182.htm#SUTIL919)
