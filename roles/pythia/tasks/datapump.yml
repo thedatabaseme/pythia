@@ -20,8 +20,9 @@
 - name: Check if Target Database is Open
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"select status from v\\$instance;\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"
-  changed_when: false
+  oracle_sql:
+    orahome: "{{ datapump_target_home.stdout }}"
+    sql: "select status from v\\$instance;"
   environment:
     ORACLE_HOME: "{{ datapump_target_home.stdout }}"
     ORACLE_SID: "{{ datapump_target_sid }}"
@@ -33,7 +34,7 @@
 
 - name: Oracle SID for Import is NOT in OPEN State
   assert:
-    that: '"OPEN" | string in item.stdout'
+    that: '"OPEN" | string in item.query_result'
     fail_msg: The Target Database {{ datapump_target_sid }} is not in OPEN State.
     success_msg: Oracle SID {{ datapump_target_sid }} is in OPEN State. Proceed with Datapump.
   become: true
@@ -68,10 +69,11 @@
 - name: Drop maybe existing Database Link to Source Database {{ datapump_source_sid }}
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n drop public database link pythia_dp_{{ datapump_source_sid }};\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
-  changed_when: true
+  oracle_sql:
+    orahome: "{{ datapump_target_home.stdout }}"
+    sql: "drop public database link pythia_dp_{{ datapump_source_sid }};"
   register: result
-  failed_when: ("FATAL" in result.stdout)
+  failed_when: ("FATAL" in result.query_result)
   environment:
     ORACLE_HOME: "{{ datapump_target_home.stdout }}"
     ORACLE_SID: "{{ datapump_target_sid }}"
@@ -83,8 +85,9 @@
 - name: Create Database Link to Source Database {{ datapump_source_sid }}
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n create public database link pythia_dp_{{ datapump_source_sid }} connect to {{ datapump_source_user }} identified by \"{{ lookup('vars', 'vault_datapump_' + datapump_source_sid) }}\" using 'PYTHIA_DP_{{ datapump_source_sid }}';\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
-  changed_when: true
+  oracle_sql:
+    orahome: "{{ datapump_target_home.stdout }}"
+    sql: "create public database link pythia_dp_{{ datapump_source_sid }} connect to {{ datapump_source_user }} identified by {{ lookup('vars', 'vault_datapump_' + datapump_source_sid) }} using 'PYTHIA_DP_{{ datapump_source_sid }}';"  # noqa line-length
   environment:
     ORACLE_HOME: "{{ datapump_target_home.stdout }}"
     ORACLE_SID: "{{ datapump_target_sid }}"
@@ -96,8 +99,9 @@
 - name: Create Directory Object for Logfiles
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"set heading off; \\n create or replace directory PYTHIA_DP_DIR as '{{ remote_stage_directory }}';\" | {{ datapump_target_home.stdout }}/bin/sqlplus -s / as sysdba"  # noqa line-length
-  changed_when: true
+  oracle_sql:
+    orahome: "{{ datapump_target_home.stdout }}"
+    sql: "create or replace directory PYTHIA_DP_DIR as '{{ remote_stage_directory }}';"
   environment:
     ORACLE_HOME: "{{ datapump_target_home.stdout }}"
     ORACLE_SID: "{{ datapump_target_sid }}"
@@ -136,7 +140,7 @@
   async: "{{ datapump_max_runtime }}"
   poll: 30
   register: result
-  failed_when: ("FATAL" in result.stdout)
+  failed_when: ("fatal" in result.stderr_lines)
   no_log: true
   tags:
     - datapump
