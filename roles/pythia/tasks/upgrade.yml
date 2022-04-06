@@ -108,8 +108,11 @@
 - name: Check if Source Database is Open
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"select status from v\\$instance;\" | {{ rdbms[oracle_source_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
-  changed_when: false
+  # shell: "echo -e \"select status from v\\$instance;\" | {{ rdbms[oracle_source_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  # changed_when: false
+  oracle_sql:
+    orahome: "{{ rdbms[oracle_source_version|string].oracle_home }}"
+    sql: "select status from v\\$instance;"
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_source_version|string].oracle_home }}"
     ORACLE_SID: "{{ oracle_sid }}"
@@ -119,7 +122,7 @@
 
 - name: Oracle SID to Upgrade is NOT in OPEN State
   assert:
-    that: '"OPEN" | string in item.stdout'
+    that: '"OPEN" | string in item.query_result'
     fail_msg: The Source Database {{ oracle_sid }} is not in OPEN State.
     success_msg: Oracle SID {{ oracle_sid }} is in OPEN State. Proceed with Upgrade.
   become: true
@@ -162,8 +165,11 @@
 - name: Check if Target Database is Open
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"select status from v\\$instance;\" | {{ rdbms[oracle_source_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
-  changed_when: false
+  # shell: "echo -e \"select status from v\\$instance;\" | {{ rdbms[oracle_source_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  # changed_when: false
+  oracle_sql:
+    orahome: "{{ rdbms[oracle_source_version|string].oracle_home }}"
+    sql: "select status from v\\$instance;"
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_target_version|string].oracle_home }}"
     ORACLE_SID: "{{ oracle_sid }}"
@@ -174,7 +180,7 @@
 - name: Fail if DB is not open
   fail:
     msg: "The database is not in open state, please check!"
-  when: target_db_status.stdout.find('OPEN') == 1
+  when: target_db_status.query_result.find('OPEN') == 1
   tags:
     - upgrade
 

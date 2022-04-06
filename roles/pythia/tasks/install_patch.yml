@@ -182,7 +182,10 @@
 - name: Stopping all Databases on Oracle Home {{ rdbms[oracle_version|string].oracle_home }}
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo shutdown immediate | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  # shell: "echo shutdown immediate | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  oracle_sql:
+    orahome: "{{ rdbms[oracle_version|string].oracle_home }}"
+    sql: "shutdown immediate;"
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
     ORACLE_SID: "{{ item }}"
@@ -240,7 +243,10 @@
 - name: Start Databases
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo startup | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  # shell: "echo startup | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  oracle_sql:
+    orahome: "{{ rdbms[oracle_version|string].oracle_home }}"
+    sql: 'startup;'
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
     ORACLE_SID: "{{ item }}"
@@ -253,7 +259,10 @@
 - name: Start all PDBs for patching
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"alter pluggable database all open;\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  # shell: "echo -e \"alter pluggable database all open;\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+  oracle_sql:
+    orahome: "{{ rdbms[oracle_version|string].oracle_home }}"
+    sql: 'alter pluggable database all open;'
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
     ORACLE_SID: "{{ item }}"

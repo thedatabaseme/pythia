@@ -114,11 +114,16 @@
 - name: Setting SYS and SYSTEM Password after Creation
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "{{ item }}"
-  changed_when: true
+  # shell: "{{ item }}"
+  # changed_when: true
+  oracle_sql:
+    orahome: "{{ rdbms[oracle_version|string].oracle_home }}"
+    sql: "{{ item }}"
   with_items:
-    - "echo -e \"alter user system identified by \"{{ system_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
-    - "echo -e \"alter user system identified by \"{{ sys_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+    # - "echo -e \"alter user system identified by \"{{ system_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+    # - "echo -e \"alter user system identified by \"{{ sys_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
+    - 'alter user system identified by "{{ system_user_password }}";'
+    - 'alter user sys identified by "{{ sys_user_password }}";'
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
     ORACLE_SID: "{{ oracle_sid }}"
@@ -148,7 +153,10 @@
 - name: Setting Password for Default DB Users
   become: true
   become_user: "{{ oracle_user }}"
-  shell: "echo -e \"alter user {{ item }} identified by \"{{ default_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"  # noqa line-length
+  # shell: "echo -e \"alter user {{ item }} identified by \"{{ default_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"  # noqa line-length
+  oracle_sql:
+    orahome: "{{ rdbms[oracle_version|string].oracle_home }}"
+    sql: 'alter user {{ item }} identified by "{{ default_user_password }}";'
   environment:
     ORACLE_HOME: "{{ rdbms[oracle_version|string].oracle_home }}"
     ORACLE_SID: "{{ oracle_sid }}"
