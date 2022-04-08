@@ -120,8 +120,6 @@
     orahome: "{{ rdbms[oracle_version|string].oracle_home }}"
     sql: "{{ item }}"
   with_items:
-    # - "echo -e \"alter user system identified by \"{{ system_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
-    # - "echo -e \"alter user system identified by \"{{ sys_user_password }}\";\" | {{ rdbms[oracle_version|string].oracle_home }}/bin/sqlplus -s / as sysdba"
     - 'alter user system identified by "{{ system_user_password }}";'
     - 'alter user sys identified by "{{ sys_user_password }}";'
   environment:
