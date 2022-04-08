@@ -1,5 +1,8 @@
 Changelog of Pythia:
 
+Version 2.3.6
+  - Fixed #3: Pythia now checks if there are running instances before adjusting the sysctl.conf
+
 Version 2.3.5
   - New Feature #34: using the shell command with sqlplus has been replaced by the oracle_sql
     module
