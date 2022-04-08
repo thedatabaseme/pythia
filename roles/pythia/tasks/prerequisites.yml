@@ -202,6 +202,29 @@
     - hugepage
     - converttohugepage
 
+# Fixes #3
+- name: Check if there are already Oracle instances
+  become: true
+  shell: "cat /etc/oratab 2> /dev/null | grep -v '#' | grep -v -e '^$' | wc -l"
+  changed_when: false
+  register: instance_count
+  when: sysctl_stable | default(false) | bool
+  tags:
+    - db
+    - rdbms
+    - prepare
+    - hugepage
+    - converttohugepage
+
+- debug:
+    var: instance_count
+  tags:
+    - db
+    - rdbms
+    - prepare
+    - hugepage
+    - converttohugepage
+
 - name: Check if Transparent Hugepages are configured
   shell: grep -w transparent_hugepage=never /etc/default/grub
   changed_when: false
@@ -216,7 +239,7 @@
   become: true
   shell: "sysctl -a | grep -w vm.nr_hugepages | grep -o [0-9]*"
   register: current_hugepages
-  when: (sysctl_stable | bool)
+  when: (sysctl_stable | bool) and (instance_count.stdout | int > 0)
   tags:
     - hugepage
 
@@ -224,7 +247,7 @@
   become: true
   shell: "cat /etc/sysctl.d/97-oracle-db-sysctl.conf | grep shmall | awk -F \"=\" {'print$2'}"
   register: current_shmall
-  when: (sysctl_stable | bool)
+  when: (sysctl_stable | bool) and (instance_count.stdout | int > 0)
   tags:
     - db
     - prepare
@@ -233,7 +256,7 @@
   become: true
   shell: "cat /etc/sysctl.d/97-oracle-db-sysctl.conf | grep shmmax | awk -F \"=\" {'print$2'}"
   register: current_shmmax
-  when: (sysctl_stable | bool)
+  when: (sysctl_stable | bool) and (instance_count.stdout | int > 0)
   tags:
     - db
     - prepare
@@ -251,8 +274,8 @@
 # Only when sysctl is stable
 - name: Calculating OS Kernel Parameter Settings shmall
   set_fact:
-    shmall: "{{ (((sga_max_size|int * 1024 * 1024 * 1024 / 4096) * 1.01) + current_shmall.stdout|int)|int }}"
-  when: ((sysctl_stable | bool) and (shmall|int < ((sga_max_size|int * 1024 * 1024 * 1024 / 4096) * 1.01) + current_shmall.stdout|int))
+    shmall: "{{ (((sga_max_size|int * 1024 * 1024 * 1024 / 4096) * 1.01) + current_shmall.stdout|default(0)|int)|int }}"
+  when: ((sysctl_stable | bool) and (shmall|int < ((sga_max_size|int * 1024 * 1024 * 1024 / 4096) * 1.01) + current_shmall.stdout|default(0)|int))
   tags:
     - db
     - prepare
@@ -266,8 +289,8 @@
 
 - name: Calculating OS Kernel Parameter Settings shmmax
   set_fact:
-    shmmax: "{{ (((sga_max_size|int * 1024 * 1024 * 1024) * 1.01) + current_shmmax.stdout|int)|int }}"
-  when: ((sysctl_stable | bool) and (shmmax|int < ((sga_max_size|int * 1024 * 1024 * 1024) * 1.01) + current_shmmax.stdout|int))
+    shmmax: "{{ (((sga_max_size|int * 1024 * 1024 * 1024) * 1.01) + current_shmmax.stdout|default(0)|int)|int }}"
+  when: ((sysctl_stable | bool) and (shmmax|int < ((sga_max_size|int * 1024 * 1024 * 1024) * 1.01) + current_shmmax.stdout|default(0)|int))
   tags:
     - db
     - prepare
@@ -281,7 +304,7 @@
 
 - name: Calculating Number of Hugepages
   set_fact:
-    hugepages: "{{ (((sga_max_size|int * 1024 / 2) * 1.01) + current_hugepages.stdout|int)|int }}"
+    hugepages: "{{ (((sga_max_size|int * 1024 / 2) * 1.01) + current_hugepages.stdout|default(0)|int)|int }}"
     reboot_required: true
   when: (sysctl_stable | bool)
   tags:
@@ -459,7 +482,7 @@
   changed_when: false
   register: check_selinux_configuration
   become: true
-  when: (not molecule_run | bool | default(false))
+  when: (not molecule_run | default(false) | bool)
   tags:
     - autostart
     - db
@@ -488,7 +511,7 @@
     state: "{{ selinux_desired_state }}"
   register: selinux_configuration_change
   become: true
-  when: '((not molecule_run | bool | default(false)) and ("SELinux state changed" in check_selinux_configuration.msg))'
+  when: '((not molecule_run | default(false) | bool) and ("SELinux state changed" in check_selinux_configuration.msg))'
   tags:
     - autostart
     - db
