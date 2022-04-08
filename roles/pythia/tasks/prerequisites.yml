@@ -216,15 +216,6 @@
     - hugepage
     - converttohugepage
 
-- debug:
-    var: instance_count
-  tags:
-    - db
-    - rdbms
-    - prepare
-    - hugepage
-    - converttohugepage
-
 - name: Check if Transparent Hugepages are configured
   shell: grep -w transparent_hugepage=never /etc/default/grub
   changed_when: false
