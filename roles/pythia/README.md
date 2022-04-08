@@ -76,9 +76,6 @@ main.yml Variables (can be set when calling the playbook, see Examples):
   - sles15_packages, sles12_packages, rhel7_packages: A list of Packages that will be installed before installing the Oracle RDBMS Software. The list can be found in the Oracle Installation Guide Documentation for each OS.
   - shmall (Default 2097152): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
   - shmmax (Default 4294967295): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
-  - current_shmall (Default 0): Just for initializing the Variable. Must not be modified
-  - current_shmmax (Default 0): Just for initializing the Variable. Must not be modified
-  - current_hugepages (Default 0): Just for initializing the Variable. Must not be modified
   - hugepages (Default 0): Will be calculated during Playbook Runtime. Will be included to the sysctl Configuration when deploying a Database
   - client_install_type (Default Administrator): Choose Which Client Install Type you want to install. Can be Administrator, Runtime, InstantClient or Custom
   - datapump_source_host (Default NULL): The source host on which the datapump_source_sid is running. Only needed when starting the playbook with the "datapump" tag, for doing an Datapump Export / Import a Database.
