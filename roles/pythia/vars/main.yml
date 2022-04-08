@@ -28,19 +28,13 @@
 #    sysctl Configuration when deploying a Database
 #  - shmmax (Default 4294967295): Will be calculated during Playbook Runtime. Will be included to the
 #    sysctl Configuration when deploying a Database
-#  - current_shmall (Default 0): Just for initializing the Variable. Must not be modified
-#  - current_shmmax (Default 0): Just for initializing the Variable. Must not be modified
-#  - current_hugepages (Default 0): Just for initializing the Variable. Must not be modified
 #  - hugepages (Default 0): Will be calculated during Playbook Runtime. Will be included to the sysctl
 #    Configuration when deploying a Database
 
 # OS Kernel Parameter Variables. Will be calculated during Playbook Run. Must not be set here
 shmall: 2097152
 shmmax: 4294967295
-current_shmall: 0
-current_shmmax: 0
 hugepages: 0
-current_hugepages: 0
 
 # Stage and Script Directories
 local_stage_directory: /mnt/oracle_stage
