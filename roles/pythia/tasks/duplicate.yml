@@ -715,7 +715,7 @@
   become_user: "{{ oracle_user }}"
   oracle_sql:
     orahome: "{{ duplicate_source_home.stdout }}"
-    sql: "startup;" 
+    sql: "startup;"
   environment:
     ORACLE_HOME: "{{ duplicate_source_home.stdout }}"
     ORACLE_SID: "{{ duplicate_target_sid }}"
