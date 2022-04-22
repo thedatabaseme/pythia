@@ -1,5 +1,9 @@
 Changelog of Pythia:
 
+Version 2.3.7
+  - Fixed #42: insserv-compat and compat-libpthread-nonshared have been added to SLES15
+    prereq packages
+
 Version 2.3.6
   - Fixed #3: Pythia now checks if there are running instances before adjusting the sysctl.conf
 

@@ -95,6 +95,8 @@ sles15_packages:
   - psmisc
   - acl
   - unzip
+  - compat-libpthread-nonshared
+  - insserv-compat
 
 sles12_packages:
   - bc
